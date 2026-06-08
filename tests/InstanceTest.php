@@ -5,21 +5,18 @@ declare(strict_types=1);
 namespace Moselwal\Tests;
 
 use Moselwal\Config;
+use PHPUnit\Framework\Attributes\Test;
 
 class InstanceTest extends ConfigTestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function constructorCreatesInstance(): void
     {
         $instance = new Config();
         self::assertInstanceOf(Config::class, $instance);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function lateStaticBindingWorksWithSubclass(): void
     {
         $instance = new TestableConfig();
@@ -27,9 +24,7 @@ class InstanceTest extends ConfigTestCase
         self::assertInstanceOf(Config::class, $instance);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function applyDefaultsAppliesPresets(): void
     {
         // Testing context is set in setUp, so applyDefaults will run
@@ -39,9 +34,7 @@ class InstanceTest extends ConfigTestCase
         self::assertTrue($GLOBALS['TYPO3_CONF_VARS']['FE']['disableNoCacheParameter']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function fluentInterfaceReturnsInstance(): void
     {
         $instance = new Config();
@@ -49,9 +42,7 @@ class InstanceTest extends ConfigTestCase
         self::assertSame($instance, $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function appendContextToSiteNameIsIdempotent(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'] = 'Acme';

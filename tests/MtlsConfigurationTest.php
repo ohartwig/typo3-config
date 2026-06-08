@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Moselwal\Tests;
 
 use phpmock\phpunit\PHPMock;
+use PHPUnit\Framework\Attributes\Test;
 
 class MtlsConfigurationTest extends ConfigTestCase
 {
     use PHPMock;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function loadCoreSecretsWithReadableCertsSetsPdoOptions(): void
     {
         // Suppress PHP 8.5 PDO constant deprecation warnings
@@ -54,9 +53,7 @@ class MtlsConfigurationTest extends ConfigTestCase
         error_reporting($previousLevel);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function loadCoreSecretsWithMissingCertsSkipsMtls(): void
     {
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');
@@ -83,9 +80,7 @@ class MtlsConfigurationTest extends ConfigTestCase
         self::assertArrayNotHasKey('driverOptions', $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function autoconfigureKeyValueMtlsReturnsOptionsWhenCertsReadable(): void
     {
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');
@@ -126,9 +121,7 @@ class MtlsConfigurationTest extends ConfigTestCase
         self::assertSame('/run/tls/ca.crt', $firstCache['options']['ca_file'] ?? '');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function autoconfigureKeyValueMtlsReturnsEmptyWhenCertsNotReadable(): void
     {
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');
@@ -160,9 +153,7 @@ class MtlsConfigurationTest extends ConfigTestCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function loadMailSecretsConfiguresMailSettings(): void
     {
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');

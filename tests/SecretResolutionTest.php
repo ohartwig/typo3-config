@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Moselwal\Tests;
 
 use phpmock\phpunit\PHPMock;
+use PHPUnit\Framework\Attributes\Test;
 
 class SecretResolutionTest extends ConfigTestCase
 {
     use PHPMock;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function resolveSecretReturnsFileEnvValue(): void
     {
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');
@@ -36,9 +35,7 @@ class SecretResolutionTest extends ConfigTestCase
         self::assertSame('secret-from-file', $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function resolveSecretReturnsDefaultFileValue(): void
     {
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');
@@ -60,9 +57,7 @@ class SecretResolutionTest extends ConfigTestCase
         self::assertSame('secret-from-default-file', $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function resolveSecretReturnsEnvValue(): void
     {
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');
@@ -81,9 +76,7 @@ class SecretResolutionTest extends ConfigTestCase
         self::assertSame('secret-from-env', $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function resolveSecretReturnsFallbackValue(): void
     {
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');
@@ -97,9 +90,7 @@ class SecretResolutionTest extends ConfigTestCase
         self::assertSame('fallback-value', $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function resolveSecretReturnsNullWhenNoSourceAvailable(): void
     {
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');
@@ -113,9 +104,7 @@ class SecretResolutionTest extends ConfigTestCase
         self::assertNull($result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function resolveSecretTrimsWhitespace(): void
     {
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');
@@ -139,9 +128,7 @@ class SecretResolutionTest extends ConfigTestCase
         self::assertSame('secret-with-whitespace', $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function resolveSecretSkipsEmptyFile(): void
     {
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');

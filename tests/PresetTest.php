@@ -6,14 +6,13 @@ namespace Moselwal\Tests;
 
 use Moselwal\Config;
 use phpmock\phpunit\PHPMock;
+use PHPUnit\Framework\Attributes\Test;
 
 class PresetTest extends ConfigTestCase
 {
     use PHPMock;
 
-    /**
-     * @test
-     */
+    #[Test]
     public function useCliPresetSetsDebugFlags(): void
     {
         $instance = new Config();
@@ -26,9 +25,7 @@ class PresetTest extends ConfigTestCase
         self::assertSame(0, $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemLogLevel']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function useProductionPresetDisablesDebug(): void
     {
         // Ensure LOG writerConfiguration exists for array_replace_recursive
@@ -43,9 +40,7 @@ class PresetTest extends ConfigTestCase
         self::assertSame(-1, $GLOBALS['TYPO3_CONF_VARS']['SYS']['displayErrors']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function useDevelopmentPresetEnablesDebugAndMailpit(): void
     {
         $instance = new Config();
@@ -60,9 +55,7 @@ class PresetTest extends ConfigTestCase
         self::assertSame('', $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_password']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function useProductionPresetVHostUsesFileWriter(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration'] = [];
@@ -82,9 +75,7 @@ class PresetTest extends ConfigTestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function useCliPresetDisablesSSLVerification(): void
     {
         $instance = new Config();
@@ -94,9 +85,7 @@ class PresetTest extends ConfigTestCase
         self::assertSame(0, $GLOBALS['TYPO3_CONF_VARS']['HTTP']['ssl_verify_peer']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function enableDeprecationLoggingSetsCorrectFlag(): void
     {
         $instance = new Config();
@@ -109,9 +98,7 @@ class PresetTest extends ConfigTestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function disableDeprecationLoggingSetsCorrectFlag(): void
     {
         $instance = new Config();
@@ -124,9 +111,7 @@ class PresetTest extends ConfigTestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function useDevelopmentPresetSetsLockSSLFalse(): void
     {
         $instance = new Config();
@@ -135,9 +120,7 @@ class PresetTest extends ConfigTestCase
         self::assertFalse($GLOBALS['TYPO3_CONF_VARS']['BE']['lockSSL']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function useProductionPresetSetsExceptionalErrors(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration'] = [];
