@@ -1,3 +1,10 @@
+## [5.5.1](https://gitlab.moselwal.io/development/moselwal/typo3-config/compare/v5.5.0...v5.5.1) (2026-06-08)
+
+
+### Bug Fixes
+
+* **tests:** migrate [@test](https://gitlab.moselwal.io/test) annotation to PHPUnit 13 #[Test] attribute ([40361b7](https://gitlab.moselwal.io/development/moselwal/typo3-config/commit/40361b79654a85dc25028d697aa36c9bd6e7fbe4))
+
 # [5.5.0](https://gitlab.moselwal.io/development/moselwal/typo3-config/compare/v5.4.5...v5.5.0) (2026-06-07)
 
 
