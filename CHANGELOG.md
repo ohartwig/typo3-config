@@ -1,3 +1,10 @@
+## [5.5.2](https://gitlab.moselwal.io/development/moselwal/typo3-config/compare/v5.5.1...v5.5.2) (2026-06-10)
+
+
+### Bug Fixes
+
+* **security:** patch H3 CLI-preset + M7 revproxy default + M8 denylist depth ([033f518](https://gitlab.moselwal.io/development/moselwal/typo3-config/commit/033f51844a5e8f63b741927ba8c7e0ac26aa74a8))
+
 ## [5.5.1](https://gitlab.moselwal.io/development/moselwal/typo3-config/compare/v5.5.0...v5.5.1) (2026-06-08)
 
 
