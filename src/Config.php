@@ -107,18 +107,43 @@ class Config implements ConfigInterface
      */
     final public function useCliPreset(): self
     {
-        $GLOBALS['TYPO3_CONF_VARS']['FE']['debug'] = TRUE;
-        $GLOBALS['TYPO3_CONF_VARS']['BE']['debug'] = TRUE;
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['devIPmask'] = '*';
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['displayErrors'] = 1;
+        // Context-aware CLI preset. Previous versions unconditionally turned
+        // off TLS verification, set FE/BE debug=true and devIPmask='*' for
+        // every CLI invocation. Because applyDefaults() runs useCliPreset()
+        // BEFORE the production-context branch, this also fired for the
+        // production CLI (e.g. supercronic-driven scheduler), MITM-exposing
+        // every outbound HTTP request and leaking debug info on errors.
+        //
+        // We now only loosen TLS/debug in development & testing contexts.
+        // The production-CLI path keeps the production logging defaults the
+        // production preset would apply via the regular flow.
+        $isLooseCliContext = $this->context->isDevelopment() || $this->context->isTesting();
+
+        if ($isLooseCliContext) {
+            $GLOBALS['TYPO3_CONF_VARS']['FE']['debug'] = true;
+            $GLOBALS['TYPO3_CONF_VARS']['BE']['debug'] = true;
+            $GLOBALS['TYPO3_CONF_VARS']['SYS']['devIPmask'] = '*';
+            $GLOBALS['TYPO3_CONF_VARS']['SYS']['displayErrors'] = 1;
+            $GLOBALS['TYPO3_CONF_VARS']['SYS']['errorHandlerErrors'] = E_ALL ^ E_NOTICE;
+            $GLOBALS['TYPO3_CONF_VARS']['SYS']['exceptionalErrors'] = 28674;
+            // Skip TLS verification only for invalid development
+            // certificates. NEVER lower these in production-CLI: doing so
+            // makes the scheduler MITM-exploitable.
+            // Hint: works only together with a core patch.
+            $GLOBALS['TYPO3_CONF_VARS']['HTTP']['ssl_verify_host'] = 0;
+            $GLOBALS['TYPO3_CONF_VARS']['HTTP']['ssl_verify_peer'] = 0;
+        } else {
+            // Production-CLI hardening: keep the production preset defaults
+            // even if useProductionPreset() never ran (applyDefaults branches
+            // skip the production branch entirely when SAPI=cli).
+            $GLOBALS['TYPO3_CONF_VARS']['FE']['debug'] = false;
+            $GLOBALS['TYPO3_CONF_VARS']['BE']['debug'] = false;
+            $GLOBALS['TYPO3_CONF_VARS']['SYS']['devIPmask'] = '';
+            $GLOBALS['TYPO3_CONF_VARS']['SYS']['displayErrors'] = -1;
+        }
+
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemLogLevel'] = 0;
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['errorHandlerErrors'] = E_ALL ^ E_NOTICE;
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['exceptionalErrors'] = 28674;
         $this->enableDeprecationLogging();
-        // no HTTPS errors, because of invalid development certificates
-        // Hint: works only together with a core patch
-        $GLOBALS['TYPO3_CONF_VARS']['HTTP']['ssl_verify_host'] = 0;
-        $GLOBALS['TYPO3_CONF_VARS']['HTTP']['ssl_verify_peer'] = 0;
         $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration'] = [
             \TYPO3\CMS\Core\Log\LogLevel::DEBUG => [
                 \TYPO3\CMS\Core\Log\Writer\FileWriter::class => [
@@ -255,12 +280,39 @@ class Config implements ConfigInterface
                 }
             );
 
+            // SECURITY: filter forbidden keys RECURSIVELY. array_diff_key
+            // only looks at the top level, so TYPO3 ENV vars that nest
+            // under DB / MAIL / EXTENSIONS ('TYPO3__DB__Connections__Default__password',
+            // 'TYPO3__MAIL__transport_smtp_password', …) pass through and
+            // get baked into the PHP config cache on disk. Walk every
+            // level of the loaded array and unset matching leaves.
+            $loaded = $configLoader->load();
+            self::removeForbiddenKeysRecursive($loaded, $forbiddenKeys);
             $GLOBALS['TYPO3_CONF_VARS'] = array_replace_recursive(
                 $GLOBALS['TYPO3_CONF_VARS'],
-                array_diff_key($configLoader->load(), $forbiddenKeys)
+                $loaded
             );
         }
         return $this;
+    }
+
+    /**
+     * Recursively unset keys present in $forbiddenKeys at any depth.
+     *
+     * @param array<mixed> $haystack
+     * @param array<string, mixed> $forbiddenKeys
+     */
+    private static function removeForbiddenKeysRecursive(array &$haystack, array $forbiddenKeys): void
+    {
+        foreach ($haystack as $key => &$value) {
+            if (isset($forbiddenKeys[$key])) {
+                unset($haystack[$key]);
+                continue;
+            }
+            if (is_array($value)) {
+                self::removeForbiddenKeysRecursive($value, $forbiddenKeys);
+            }
+        }
     }
 
     final public function useImageMagick(string $path = '/usr/bin/'): self
@@ -408,11 +460,31 @@ class Config implements ConfigInterface
      * a reverse proxy. Without this, Secure cookies won't work and the
      * backend login will fail silently.
      *
-     * @param string $trustedIPs Comma-separated proxy IPs or '*' for all
+     * SECURITY: $trustedIPs default '*' means TYPO3 honours X-Forwarded-For
+     * from any source — the public Internet can spoof client IPs and
+     * thereby defeat devIPmask, lockToIP, audit-log attribution and any
+     * IP-based rate limiter downstream. Pass the actual proxy address
+     * (e.g. '172.20.0.0/16' for a docker bridge, '10.0.0.0/8' for a private
+     * network, or the explicit proxy IP). The '*' default is kept for
+     * backwards-compat with existing setups but emits a deprecation log
+     * when used; tighten it project-by-project.
+     *
+     * @param string $trustedIPs Comma-separated proxy IPs / CIDRs, '*' = any
      * @return $this
      */
     final public function useReverseProxy(string $trustedIPs = '*'): self
     {
+        if ('*' === $trustedIPs) {
+            // Logged once per request — appears in deploy logs so the
+            // wildcard does not stay invisible forever. Switch to an
+            // explicit CIDR and the warning disappears.
+            error_log(
+                'moselwal/typo3-config: useReverseProxy(\'*\') trusts '
+                . 'X-Forwarded-For from any source. Pass an explicit CIDR '
+                . '(e.g. the docker bridge or the upstream proxy IP) to '
+                . 'restore IP-spoofing protection. See security audit M7.'
+            );
+        }
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['reverseProxyIP'] = $trustedIPs;
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['reverseProxySSL'] = $trustedIPs;
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['reverseProxyHeaderMultiValue'] = 'first';
