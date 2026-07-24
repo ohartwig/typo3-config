@@ -1,3 +1,11 @@
+## [5.5.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.5.2...v5.5.3) (2026-07-24)
+
+
+### Bug Fixes
+
+* **ci:** adopt github-mirror 1.2.10 (skip mirror when no token) ([8da82f8](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/8da82f875d9e44dcf72c262e1cc59678778cf04a))
+* **ci:** github-mirror 1.2.11 (contains skip-if-no-token) ([3196778](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/3196778d314337a589e9552407142596b8777fa6))
+
 ## [5.5.2](https://gitlab.moselwal.io/development/moselwal/typo3-config/compare/v5.5.1...v5.5.2) (2026-06-10)
 
 
