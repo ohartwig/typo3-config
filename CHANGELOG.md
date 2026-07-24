@@ -1,3 +1,10 @@
+## [5.5.4](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.5.3...v5.5.4) (2026-07-24)
+
+
+### Bug Fixes
+
+* **ci:** drop github-mirror (no public mirroring for now) ([8624763](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/8624763a4f28824483667bd319006475cf01add6))
+
 ## [5.5.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.5.2...v5.5.3) (2026-07-24)
 
 
