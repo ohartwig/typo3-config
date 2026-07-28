@@ -1,3 +1,10 @@
+## [5.6.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.6.0...v5.6.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **preset:** clear the backend HTTPS lock in the development preset ([0150d6f](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/0150d6f9971a29ddb3a505a923ffb5f4ad47a4ff))
+
 # [5.6.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.5.4...v5.6.0) (2026-07-28)
 
 
