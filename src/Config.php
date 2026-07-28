@@ -227,6 +227,11 @@ class Config implements ConfigInterface
         $GLOBALS['TYPO3_CONF_VARS']['FE']['debug'] = true;
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['devIPmask'] = '*';
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '.*';
+        // Local domains are served over plain HTTP; leaving the backend's HTTPS
+        // lock on would make it unreachable there. Set explicitly rather than
+        // left unset, so switching to this preset always clears a lock a
+        // production preset may have applied first.
+        $GLOBALS['TYPO3_CONF_VARS']['BE']['lockSSL'] = false;
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['displayErrors'] = 1;
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['belogErrorReporting'] = E_ALL;
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['exceptionalErrors'] = E_ALL;
