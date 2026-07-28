@@ -41,6 +41,7 @@ public function allowNoCacheQueryParameter(): self;
 public function forbidNoCacheQueryParameter(): self;
 public function useReverseProxy(string $trustedIPs = '*'): self;
 public function useAuditLogging(): self;
+public function useRequestCorrelation(): self;
 public function useShorterCacheLifetime(int $seconds = 3600): self;
 public function useNoCacheDebugHeaders(): self;
 public function useBackendEntryPoint(string $entryPoint, ?string $cookieDomain = null): self;
