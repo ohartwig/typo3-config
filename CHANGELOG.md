@@ -1,3 +1,10 @@
+# [5.6.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.5.4...v5.6.0) (2026-07-28)
+
+
+### Features
+
+* attach the edge request id to every log record ([e79d9c7](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/e79d9c7d2434445d05ae64095e60c2ce0e50381c))
+
 ## [5.5.4](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.5.3...v5.5.4) (2026-07-24)
 
 
