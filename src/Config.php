@@ -539,6 +539,35 @@ class Config implements ConfigInterface
     }
 
     /**
+     * Haengt die am Edge erzeugte Request-ID an jeden Log-Eintrag.
+     *
+     * Traefik vergibt die ID am aeussersten Hop und reicht sie unveraendert
+     * durch Caddy an die Anwendung. Ohne diesen Prozessor ist das
+     * Anwendungs-Log die einzige Stelle, an der der Faden reisst — und
+     * Korrelation bedeutet wieder Zeitstempel-Vergleich von Hand.
+     *
+     * Registriert global (LOG.processorConfiguration), nicht pro Komponente:
+     * eine Korrelations-ID, die nur an manchen Eintraegen haengt, laesst genau
+     * die Luecken, die man beim Nachverfolgen braucht.
+     */
+    final public function useRequestCorrelation(): self
+    {
+        $processors = [
+            \TYPO3\CMS\Core\Log\LogLevel::DEBUG => [
+                \Moselwal\Log\RequestIdProcessor::class => [],
+            ],
+        ];
+
+        // Bestehende Prozessor-Konfig mergen (nicht ueberschreiben).
+        $GLOBALS['TYPO3_CONF_VARS']['LOG']['processorConfiguration'] = array_replace_recursive(
+            $GLOBALS['TYPO3_CONF_VARS']['LOG']['processorConfiguration'] ?? [],
+            $processors
+        );
+
+        return $this;
+    }
+
+    /**
      * Setzt die Default-Cache-Lifetime fuer FE-Pages auf einen vernuenftigen
      * Wert (Default 1h statt TYPO3-Default 24h). Verhindert dass ein einmal
      * gepoisoneter Cache-Eintrag jahrelang persistiert. Kann von einzelnen
