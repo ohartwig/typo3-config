@@ -1,10 +1,6 @@
+includes:
+    - vendor/moselwal/dev/config/typo3/phpstan.neon
+
 parameters:
-    level: 8
     paths:
         - src
-    ignoreErrors:
-        - '#Class Moselwal\\KeyValueStore\\.+ not found#'
-        - '#Instantiated class Helhum\\ConfigLoader\\.+ not found#'
-        - '#unknown class Helhum\\ConfigLoader#'
-        - '#Unsafe usage of new static\(\)#'
-        - '#should return static\(Moselwal\\Config\) but returns Moselwal\\Config#'

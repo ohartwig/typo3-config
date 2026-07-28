@@ -47,7 +47,7 @@ class Config implements ConfigInterface
     public function applyDefaults(): self
     {
         // Ensure DB driver is always set (settings.php might be empty after install-tool reset)
-        if (empty($GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']['driver'])) {
+        if ('' === (string)($GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']['driver'] ?? '')) {
             $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']['driver'] = 'pdo_mysql';
         }
 
@@ -62,7 +62,7 @@ class Config implements ConfigInterface
         } elseif ($this->context->isDevelopment() || $this->context->isTesting()) {
             $this->useDevelopmentPreset();
         } elseif ($this->context->isProduction()) {
-            if (!empty(getenv('APP_ROOT'))) {
+            if ('' !== self::env('APP_ROOT')) {
                 $this->useProductionPreset();
             } else {
                 $this->useProductionPresetVHost();
@@ -427,7 +427,7 @@ class Config implements ConfigInterface
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'smtp';
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_encrypt'] = '';
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_password'] = '';
-        $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = $host . ($port ? ':' . (string)$port : '');
+        $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = $host . (null !== $port && 0 !== $port ? ':' . (string)$port : '');
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_username'] = '';
         return $this;
     }
@@ -735,8 +735,9 @@ class Config implements ConfigInterface
      */
     public function autoconfigureCaching(array $additionalCachesKeyValue = [], array $additionalCachesAPCU = [], string $keyvaluePassword = ''): self
     {
-        if ($redisHost = trim(getenv('KEYVALUE_HOST') ?: '')) {
-            $redisPortRaw = trim((string)(getenv('KEYVALUE_PORT') ?: ''));
+        $redisHost = trim(self::env('KEYVALUE_HOST'));
+        if ('' !== $redisHost) {
+            $redisPortRaw = trim(self::env('KEYVALUE_PORT'));
             $redisPort = (int)($redisPortRaw !== '' ? $redisPortRaw : '6379');
             if ($redisPort <= 0 || $redisPort > 65535) {
                 $redisPort = 6379;
@@ -871,7 +872,7 @@ class Config implements ConfigInterface
                 $additionalCachesAPCU
             );
 
-            if (!getenv('KEYVALUE_HOST')) {
+            if ('' === self::env('KEYVALUE_HOST')) {
                 $apcuCaches = array_merge($apcuCaches, [
                     'pages'                 => ['defaultLifetime' => 86400*30],
                     'hash'                  => ['defaultLifetime' => 86400*30],
@@ -1098,7 +1099,7 @@ class Config implements ConfigInterface
         $envFileKey = strtoupper($key) . '_FILE';
         $defaultFile = '/run/secrets/' . strtolower($key);
 
-        $envFilePath = trim((string)getenv($envFileKey) ?: '');
+        $envFilePath = trim(self::env($envFileKey));
         if ($envFilePath !== '' && is_readable($envFilePath)) {
             $value = trim((string)file_get_contents($envFilePath));
             if ($value !== '') {
@@ -1113,7 +1114,7 @@ class Config implements ConfigInterface
             }
         }
 
-        $envValue = trim((string)getenv($key) ?: '');
+        $envValue = trim(self::env($key));
         if ($envValue !== '') {
             return $envValue;
         }
@@ -1138,7 +1139,7 @@ class Config implements ConfigInterface
         // 2) Fall back to explicit file paths
         // 3) Finally fall back to the conventional defaults in /run/tls
 
-        $tlsDir = rtrim(trim((string)getenv('DB_SSL_DIR') ?: ''), '/');
+        $tlsDir = rtrim(trim(self::env('DB_SSL_DIR')), '/');
         if ($tlsDir === '') {
             $tlsDir = '/run/tls';
         }
@@ -1147,11 +1148,11 @@ class Config implements ConfigInterface
         // - DB_SSL_NAME allows explicitly setting the client cert basename.
         // - Otherwise we try to derive from the configured DB host (first label),
         //   and finally fall back to "httpd" (your current convention).
-        $dbHost = trim((string)getenv('TYPO3__DB__Connections__Default__host') ?: '');
+        $dbHost = trim(self::env('TYPO3__DB__Connections__Default__host'));
         $hostLabel = $dbHost !== '' ? explode('.', $dbHost, 2)[0] : '';
 
         $nameCandidates = array_values(array_filter([
-            trim((string)getenv('DB_SSL_NAME') ?: ''),
+            trim(self::env('DB_SSL_NAME')),
             $hostLabel,
             'httpd',
         ], static fn ($v) => $v !== ''));
@@ -1176,13 +1177,13 @@ class Config implements ConfigInterface
 
         // Explicit file path overrides (fallback)
         if ($caFile === '') {
-            $caFile = trim((string)getenv('DB_SSL_CA') ?: '');
+            $caFile = trim(self::env('DB_SSL_CA'));
         }
         if ($certFile === '') {
-            $certFile = trim((string)getenv('DB_SSL_CERT') ?: '');
+            $certFile = trim(self::env('DB_SSL_CERT'));
         }
         if ($keyFile === '') {
-            $keyFile = trim((string)getenv('DB_SSL_KEY') ?: '');
+            $keyFile = trim(self::env('DB_SSL_KEY'));
         }
 
         // Conventional defaults (final fallback)
@@ -1377,7 +1378,7 @@ class Config implements ConfigInterface
      */
     private function autoconfigureKeyValueMtlsOptions(string $host): array
     {
-        $tlsDir = rtrim(trim((string)getenv('KEYVALUE_SSL_DIR') ?: ''), '/');
+        $tlsDir = rtrim(trim(self::env('KEYVALUE_SSL_DIR')), '/');
         if ($tlsDir === '') {
             $tlsDir = '/run/tls';
         }
@@ -1385,7 +1386,7 @@ class Config implements ConfigInterface
         $hostLabel = $host !== '' ? explode('.', $host, 2)[0] : '';
 
         $nameCandidates = array_values(array_filter([
-            trim((string)getenv('KEYVALUE_SSL_NAME') ?: ''),
+            trim(self::env('KEYVALUE_SSL_NAME')),
             $hostLabel,
             'httpd',
         ], static fn ($v) => $v !== ''));
@@ -1408,13 +1409,13 @@ class Config implements ConfigInterface
         }
 
         if ($caFile === '') {
-            $caFile = trim((string)getenv('KEYVALUE_SSL_CA') ?: '');
+            $caFile = trim(self::env('KEYVALUE_SSL_CA'));
         }
         if ($certFile === '') {
-            $certFile = trim((string)getenv('KEYVALUE_SSL_CERT') ?: '');
+            $certFile = trim(self::env('KEYVALUE_SSL_CERT'));
         }
         if ($keyFile === '') {
-            $keyFile = trim((string)getenv('KEYVALUE_SSL_KEY') ?: '');
+            $keyFile = trim(self::env('KEYVALUE_SSL_KEY'));
         }
 
         if ($caFile === '') {
@@ -1432,7 +1433,7 @@ class Config implements ConfigInterface
         }
 
         // peer_name should match the server certificate CN/SAN; allow override.
-        $peerName = trim((string)getenv('KEYVALUE_TLS_PEER_NAME') ?: '');
+        $peerName = trim(self::env('KEYVALUE_TLS_PEER_NAME'));
         if ($peerName === '') {
             $peerName = $host;
         }
@@ -1447,5 +1448,20 @@ class Config implements ConfigInterface
             'verify_peer_name' => true,
             'allow_self_signed' => false,
         ];
+    }
+
+    /**
+     * getenv() as a string, without the short ternary.
+     *
+     * getenv() signals "not set" with false, and `?: ''` conflated that with
+     * an empty value while relying on loose truthiness — so a variable set to
+     * "0" read as unset. The explicit check says what is meant and keeps that
+     * case intact.
+     */
+    private static function env(string $key): string
+    {
+        $value = getenv($key);
+
+        return false === $value ? '' : $value;
     }
 }
