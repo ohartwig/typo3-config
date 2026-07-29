@@ -1,3 +1,10 @@
+## [5.6.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.6.1...v5.6.2) (2026-07-29)
+
+
+### Bug Fixes
+
+* **docs:** point at the handbook repository, not an unreachable domain ([1209141](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/1209141c12db5f686ac4737253772c6ddf34e5b6))
+
 ## [5.6.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.6.0...v5.6.1) (2026-07-28)
 
 
