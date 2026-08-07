@@ -1,3 +1,10 @@
+# [5.7.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.6.2...v5.7.0) (2026-08-07)
+
+
+### Features
+
+* **commit-signing:** add .gitsigners + lefthook hint (G-SDLC-002 step 3) ([8c4e2ad](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/8c4e2adfcffa48edc1da6c4fee4b6c51cbaf2101))
+
 ## [5.6.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.6.1...v5.6.2) (2026-07-29)
 
 
