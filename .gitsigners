@@ -1,0 +1,24 @@
+# Allowed signers for git commits in this repository.
+#
+# Policy: https://gitlab.moselwal.io/development/gitlab-profile/-/blob/main/igs/engineering/commit-signing-policy.md
+# Standard: ed25519 signing key on YubiKey 5 Series, FIDO2 resident, verify-required.
+#
+# Format follows the OpenSSH allowed-signers convention and is consumed by
+# `git verify-commit` and the commit-signing/verify CI gate:
+#
+#   <email-identity> namespaces="git" <ssh-public-key-or-gpg-fingerprint>
+#
+# One line per authorised signer. CODEOWNERS controls who can edit this file
+# (same review pool as security-sensitive changes per the policy).
+#
+# To enrol (per engineer, once):
+#   ssh-keygen -t ed25519 -O resident -O verify-required \
+#     -C "you@moselwal.de" -f ~/.ssh/moselwal-signing
+#   # Add the public key to your GitLab profile under "SSH signing keys"
+#   # (the auth SSH key list is separate — GitLab distinguishes the usage).
+#   # Then append one line below:
+#   #   you@moselwal.de namespaces="git" ssh-ed25519 AAAA... you@moselwal.de
+#
+# GPG signing remains acceptable when paired with a YubiKey-resident GPG
+# key already registered with GitLab; use the GPG fingerprint form on
+# the line for that case.
