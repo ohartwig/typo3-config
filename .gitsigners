@@ -22,3 +22,5 @@
 # GPG signing remains acceptable when paired with a YubiKey-resident GPG
 # key already registered with GitLab; use the GPG fingerprint form on
 # the line for that case.
+
+coding-agent@ole-hartwig.eu namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAeevu+Rgv6Q4eKVSOuofIT1SzulbBfALtkWCcs9t8ad koh-coding-agent-signing-2026-07
