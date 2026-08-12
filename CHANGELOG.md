@@ -1,3 +1,10 @@
+## [5.7.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.0...v5.7.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* **security:** add coding-agent to .gitsigners ([e8d0e9f](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/e8d0e9fa7510babd2e5c9e50b282f7874f18f332))
+
 # [5.7.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.6.2...v5.7.0) (2026-08-07)
 
 
