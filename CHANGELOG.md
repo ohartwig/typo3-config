@@ -1,3 +1,11 @@
+## [5.7.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.1...v5.7.2) (2026-08-14)
+
+
+### Bug Fixes
+
+* allow the infection extension installer plugin ([b695d5f](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/b695d5f409a92cee21a3297e66b581698d0ede7d))
+* **ci:** point at the current hosts ([2e2a7ef](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/2e2a7ef3ce067ea802845534416824b81e70082b))
+
 ## [5.7.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.0...v5.7.1) (2026-08-12)
 
 
