@@ -66,6 +66,7 @@
     },
     "config": {
         "allow-plugins": {
+            "infection/extension-installer": true,
             "composer/installers": true,
             "ergebnis/composer-normalize": true,
             "phpstan/extension-installer": true,
