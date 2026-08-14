@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of the package "typo3-config" by Moselwal Digitalagentur GmbH.
+ * This file is part of the package "typo3-config" by Kai Ole Hartwig.
  */
 
 namespace Moselwal;
