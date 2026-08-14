@@ -1,6 +1,6 @@
 # Allowed signers for git commits in this repository.
 #
-# Policy: https://gitlab.moselwal.io/development/gitlab-profile/-/blob/main/igs/engineering/commit-signing-policy.md
+# Policy: https://git.ole-hartwig.eu/development/gitlab-profile/-/blob/main/igs/engineering/commit-signing-policy.md
 # Standard: ed25519 signing key on YubiKey 5 Series, FIDO2 resident, verify-required.
 #
 # Format follows the OpenSSH allowed-signers convention and is consumed by
