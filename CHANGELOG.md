@@ -1,3 +1,10 @@
+## [5.7.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.2...v5.7.3) (2026-08-15)
+
+
+### Bug Fixes
+
+* **tests:** order tests by dependency and chance, never by defects ([626f17a](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/626f17adf5bbeb089f7c74d71b8f70a0501657ef))
+
 ## [5.7.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.1...v5.7.2) (2026-08-14)
 
 
