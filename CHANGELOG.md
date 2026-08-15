@@ -1,3 +1,10 @@
+## [5.7.4](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.3...v5.7.4) (2026-08-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency php to ^8.5.9 ([a7513d2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/a7513d255204c6fe2536f781f56000b6a17609ff))
+
 ## [5.7.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.2...v5.7.3) (2026-08-15)
 
 
