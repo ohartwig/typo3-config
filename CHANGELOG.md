@@ -1,3 +1,9 @@
+## [5.7.5](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.4...v5.7.5) (2026-08-15)
+
+### :repeat: Chores
+
+* **ci:** drop the local .releaserc.yml, which was overriding the preset ([48a2074](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/48a20741eb634d8f0887c3bdef430eb2cb5d2f97))
+
 ## [5.7.4](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.3...v5.7.4) (2026-08-15)
 
 
