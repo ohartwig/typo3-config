@@ -1,3 +1,9 @@
+## [5.7.7](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.6...v5.7.7) (2026-08-22)
+
+### :bug: Fixes
+
+* **tests:** MailTransportTest disarmed the function mocks in two other files ([7d26645](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/7d26645497daab6e9aaabd488e166c672b9ea45f))
+
 ## [5.7.6](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.5...v5.7.6) (2026-08-22)
 
 ### :bug: Fixes
