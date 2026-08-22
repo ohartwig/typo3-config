@@ -1259,6 +1259,23 @@ class Config implements ConfigInterface
         return $this;
     }
 
+    /**
+     * Loads the mail credentials, and switches the transport to the DSN when one
+     * is present.
+     *
+     * The transport line is not a convenience. Until 2026-08-22 this method set
+     * MAIL/dsn and nothing else, while MAIL/transport stayed at TYPO3's default
+     * of 'sendmail' — and useMailpit(), the only other place that touches the
+     * transport, runs solely in useDevelopmentPreset(). Every production site
+     * built on this package therefore handed its mail to a sendmail binary that
+     * does not exist in the container: no exception, no log line, mail simply
+     * gone. A DSN that is configured and never read is worse than none, because
+     * it reads like the feature is wired.
+     *
+     * Only set when a DSN actually resolves. An installation that configures SMTP
+     * through transport_smtp_* and leaves MAIL_DSN unset keeps working exactly as
+     * before.
+     */
     final public function loadMailSecrets(?string $mailPassword = null, ?string $mailUsername = null, ?string $mailDSN = null): self
     {
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_password'] =
@@ -1267,8 +1284,12 @@ class Config implements ConfigInterface
         $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_username'] =
             $this->resolveSecret('MAIL_USERNAME', $mailUsername);
 
-        $GLOBALS['TYPO3_CONF_VARS']['MAIL']['dsn'] =
-            $this->resolveSecret('MAIL_DSN', $mailDSN);
+        $dsn = $this->resolveSecret('MAIL_DSN', $mailDSN);
+        $GLOBALS['TYPO3_CONF_VARS']['MAIL']['dsn'] = $dsn;
+
+        if (is_string($dsn) && trim($dsn) !== '') {
+            $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'dsn';
+        }
 
         return $this;
     }
