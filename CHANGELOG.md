@@ -1,3 +1,9 @@
+## [5.7.6](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.5...v5.7.6) (2026-08-22)
+
+### :bug: Fixes
+
+* **mail:** a DSN that is set and never read is worse than no DSN ([61b96f2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/61b96f2e5cb339e85a35f5e0029bdb4f55c3f718))
+
 ## [5.7.5](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.4...v5.7.5) (2026-08-15)
 
 ### :repeat: Chores
