@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Moselwal\Tests;
 
 use Moselwal\Config;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
@@ -13,6 +14,22 @@ use PHPUnit\Framework\Attributes\Test;
  * left MAIL/transport at TYPO3's 'sendmail' default, so every production site
  * built on this package posted its mail to a binary the container does not have.
  */
+/**
+ * Separate processes, and not out of caution.
+ *
+ * These tests reach resolveSecret(), which calls getenv() inside the Moselwal
+ * namespace. SecretResolutionTest and MtlsConfigurationTest replace that very
+ * function with php-mock, and php-mock can only intercept a namespaced call
+ * that PHP has not already resolved in this process. The suite runs
+ * executionOrder="depends,random", so on the seeds where this class runs first
+ * it silently disarms nine tests in two other files — measured: seed 1 turns a
+ * green suite into ten failures, every other seed tried stays green.
+ *
+ * That is exactly the kind of order-dependent damage a random order exists to
+ * expose, and it was exposed by CI rather than locally, where the seed happened
+ * to be kind.
+ */
+#[RunTestsInSeparateProcesses]
 final class MailTransportTest extends ConfigTestCase
 {
     protected function setUp(): void
