@@ -1,3 +1,9 @@
+## [5.8.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.7...v5.8.0) (2026-08-28)
+
+### :sparkles: Features
+
+* **login:** wire GitLab as an OAuth2 login provider for the backend ([df22b7f](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/df22b7fea72aa19a341ebd9749714b0222fb6068))
+
 ## [5.7.7](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.6...v5.7.7) (2026-08-22)
 
 ### :bug: Fixes
