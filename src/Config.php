@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace Moselwal;
 
+use Mfc\OAuth2\ResourceServer\GitLab as GitLabResourceServer;
+use Mfc\OAuth2\ResourceServer\Registry as OAuth2ResourceServerRegistry;
 use Moselwal\KeyValueStore\Cache\Backend\KeyValueBackend;
 use Moselwal\KeyValueStore\Locking\KeyValueLockingStrategy;
 use Moselwal\KeyValueStore\Session\Backend\KeyValueSessionBackend;
@@ -1290,6 +1292,110 @@ class Config implements ConfigInterface
         if (is_string($dsn) && trim($dsn) !== '') {
             $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'dsn';
         }
+
+        return $this;
+    }
+
+    /**
+     * Register GitLab as an OAuth2 login provider for the TYPO3 backend.
+     *
+     * Requires mfc/oauth2. If the extension is missing, or either credential
+     * cannot be resolved, this method does nothing at all: no login provider,
+     * and cookieSameSite stays on the hardened default. That makes it safe to
+     * call unconditionally from any additional.php, including instances that
+     * have no GitLab behind them.
+     *
+     * Authorization hangs off ONE GitLab project. Anyone who is not a member
+     * of it cannot reach the backend, because the auth service only returns
+     * success for an access level above zero. From $adminUserLevel upwards the
+     * user becomes a TYPO3 admin. For anything in between, put the GitLab
+     * access level (10/20/30/40) into the "gitlabGroup" field of a be_groups
+     * record and the group is assigned on login.
+     *
+     * Password and passkey login are untouched — this adds a third way in, it
+     * does not replace the other two.
+     *
+     * @param string $gitlabServer Base URL of the GitLab instance, e.g. 'https://git.example.com'
+     * @param string $projectName Project path whose membership governs backend access, e.g. 'devops/typo3-backend-access'
+     * @param int $adminUserLevel GitLab access level from which the user becomes a TYPO3 admin (10 Guest, 20 Reporter, 30 Developer, 40 Maintainer)
+     * @param string $defaultGroups Comma-separated be_groups UIDs used when no gitlabGroup mapping matches
+     * @param bool $blockExternalUsers Refuse users carrying GitLab's "external" flag
+     * @param bool $overrideUser Re-apply admin/disable/starttime/endtime from GitLab on every login
+     * @param string $label Text on the backend login screen
+     * @param string|null $appId Fallback when GITLAB_OAUTH_APP_ID cannot be resolved
+     * @param string|null $appSecret Fallback when GITLAB_OAUTH_APP_SECRET cannot be resolved
+     * @return $this
+     */
+    final public function useGitLabBackendLogin(
+        string $gitlabServer,
+        string $projectName,
+        int $adminUserLevel = 40,
+        string $defaultGroups = '0',
+        bool $blockExternalUsers = true,
+        bool $overrideUser = false,
+        string $label = 'Login mit GitLab',
+        ?string $appId = null,
+        ?string $appSecret = null,
+    ): self {
+        if (!class_exists(OAuth2ResourceServerRegistry::class) || !class_exists(GitLabResourceServer::class)) {
+            return $this;
+        }
+
+        $appId = (string)$this->resolveSecret('GITLAB_OAUTH_APP_ID', $appId);
+        $appSecret = (string)$this->resolveSecret('GITLAB_OAUTH_APP_SECRET', $appSecret);
+
+        // Half a credential pair is not a configuration. Registering the
+        // provider anyway would put a login button on the screen that can only
+        // ever fail, and would have loosened cookieSameSite for nothing.
+        if ($appId === '' || $appSecret === '') {
+            return $this;
+        }
+
+        $gitlabServer = rtrim(trim($gitlabServer), '/');
+        if ($gitlabServer === '' || $projectName === '') {
+            return $this;
+        }
+
+        // The OAuth2 callback is a cross-site navigation coming back from
+        // GitLab. Under SameSite=strict the browser withholds the nonce cookie
+        // that carries the request token, and the callback fails the CSRF
+        // check every time. 'lax' still covers the cases strict was chosen for
+        // here, because it only relaxes top-level GET navigations.
+        $GLOBALS['TYPO3_CONF_VARS']['BE']['cookieSameSite'] = 'lax';
+
+        // ext_localconf.php of mfc/oauth2 reads these through the
+        // ExtensionConfiguration API and only registers the login provider
+        // when enableBackendLogin is on. additional.php runs before that, so
+        // the whole feature stays configuration-driven — nothing to click in
+        // the install tool, nothing that can drift per instance.
+        $this->setConfigPathValues('EXTENSIONS/oauth2', [
+            'enableBackendLogin' => '1',
+            'overrideUser' => $overrideUser ? '1' : '0',
+            'backendUserRealNameFormat' => '%name%',
+        ]);
+
+        OAuth2ResourceServerRegistry::addServer(
+            'gitlab',
+            $label,
+            GitLabResourceServer::class,
+            [
+                'enabled' => true,
+                'arguments' => [
+                    'appId' => $appId,
+                    'appSecret' => $appSecret,
+                    'gitlabServer' => $gitlabServer,
+                    'gitlabAdminUserLevel' => $adminUserLevel,
+                    'gitlabDefaultGroups' => $defaultGroups,
+                    // be_users.options is a bit field: 1 = inherit page mounts
+                    // from groups, 2 = inherit file mounts. Without both, the
+                    // group mapping above would assign groups that grant the
+                    // user nothing.
+                    'gitlabUserOption' => 3,
+                    'blockExternalUser' => $blockExternalUsers,
+                    'projectName' => $projectName,
+                ],
+            ]
+        );
 
         return $this;
     }
