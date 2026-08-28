@@ -58,4 +58,5 @@ public function addFileLogger(string $namespace, ?string $fileName = null, ?stri
 public function setNullLogger(string $namespace, string $logLevel = \TYPO3\CMS\Core\Log\LogLevel::DEBUG): self;
 public function loadCoreSecrets(?string $dbUser = null, ?string $dbPassword = null, ?string $encryptionKey = null, ?string $installToolPassword = null): self;
 public function loadMailSecrets(?string $mailPassword = null, ?string $mailUsername = null, ?string $mailDSN = null): self;
+public function useGitLabBackendLogin(string $gitlabServer, string $projectName, int $adminUserLevel = 40, string $defaultGroups = '0', bool $blockExternalUsers = true, bool $overrideUser = false, string $label = 'Login mit GitLab', ?string $appId = null, ?string $appSecret = null): self;
 }
