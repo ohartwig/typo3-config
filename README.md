@@ -13,6 +13,7 @@ Fluent PHP API for environment-specific TYPO3 configuration. Provides context-ba
 - **Caching Auto-Configuration** — Redis/Valkey (via `moselwal/keyvalue-store`), APCu, or file backends
 - **TLS/mTLS Auto-Configuration** — Automatic certificate discovery for database and Redis connections
 - **Mailer Setup** — SMTP and Mailpit configuration helpers
+- **GitLab-Backend-Login** — OAuth2-Login-Provider fuer das Backend (via `mfc/oauth2`)
 - **Logging Presets** — Context-aware logging configuration
 - **Image Engine** — ImageMagick and GraphicsMagick configuration
 - **Fluent Interface** — Chainable API for readable configuration
@@ -58,6 +59,64 @@ Config::get()->loadCoreSecrets();
 ```
 
 No secrets need to be committed to Git or stored in `.env` files.
+
+## GitLab-Login fuers Backend
+
+`useGitLabBackendLogin()` haengt das TYPO3-Backend an eine GitLab-Instanz. Voraussetzung
+ist die Extension [`mfc/oauth2`](https://packagist.org/packages/mfc/oauth2) — ohne sie
+macht die Methode nichts.
+
+```php
+Config::initialize()
+    ->loadCoreSecrets()
+    ->useGitLabBackendLogin(
+        gitlabServer: 'https://git.example.com',
+        projectName: 'devops/typo3-backend-access',
+        adminUserLevel: 40,   // ab Maintainer wird der Benutzer TYPO3-Admin
+    );
+```
+
+Die App-ID und das App-Secret kommen aus derselben Kaskade wie alle anderen Secrets —
+`GITLAB_OAUTH_APP_ID_FILE` → `/run/secrets/gitlab_oauth_app_id` → `getenv()` → Parameter,
+analog fuer `GITLAB_OAUTH_APP_SECRET`. Nichts davon gehoert in Git oder in eine `.env`.
+
+**Die Methode ist bewusst still.** Fehlt die Extension, fehlt eines der beiden Secrets
+oder fehlt der Projektpfad, passiert gar nichts: kein Login-Button, keine geaenderte
+Cookie-Konfiguration. Der Aufruf ist damit auch auf Instanzen unbedenklich, hinter denen
+kein GitLab steht — er schaltet sich selbst frei, sobald die Secrets vorhanden sind.
+
+### Wer darf rein
+
+Die Berechtigung haengt an **einem** GitLab-Projekt (`projectName`):
+
+| GitLab | TYPO3 |
+|---|---|
+| kein Mitglied (Access Level 0) | Login wird abgelehnt |
+| Access Level > 0 | Login erlaubt |
+| Access Level ≥ `adminUserLevel` | TYPO3-Admin |
+| `external`-Flag | abgelehnt, solange `blockExternalUsers` gesetzt ist |
+
+Feinere Zuordnung laeuft ueber `be_groups`: Die Extension legt dort das Feld `gitlabGroup`
+an. Traegt man dort ein GitLab-Access-Level ein (10 Guest, 20 Reporter, 30 Developer,
+40 Maintainer), bekommt jeder Benutzer mit diesem Level die Gruppe beim Login zugewiesen.
+Greift kein Mapping, gilt `defaultGroups`.
+
+`overrideUser` (Default aus) schreibt bei **jedem** Login `admin`, `disable`, `starttime`
+und `endtime` aus GitLab zurueck. Eingeschaltet heisst das: ein in TYPO3 gesperrter
+Redakteur wird durch einen GitLab-Login wieder entsperrt. Wer das einschaltet, muss
+Sperren konsequent in GitLab abbilden.
+
+### Was die Methode sonst noch anfasst
+
+- `BE/cookieSameSite` wird auf `lax` gesetzt. Der OAuth2-Rueckweg von GitLab ist eine
+  Cross-Site-Navigation; unter `strict` haelt der Browser das Nonce-Cookie zurueck und
+  der RequestToken-Check schlaegt jedes Mal fehl.
+- `EXTENSIONS/oauth2` wird gesetzt, damit `mfc/oauth2` den Login-Provider registriert.
+  Das spart den Klick im Install-Tool und haelt die Konfiguration im Code.
+
+Passwort- und Passkey-Login bleiben unveraendert. GitLab kommt als dritter Weg dazu und
+ersetzt die anderen beiden nicht — faellt die GitLab-Instanz aus, kommt man weiterhin
+ins Backend.
 
 ## Available Presets
 
