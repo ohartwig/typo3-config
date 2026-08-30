@@ -106,6 +106,28 @@ und `endtime` aus GitLab zurueck. Eingeschaltet heisst das: ein in TYPO3 gesperr
 Redakteur wird durch einen GitLab-Login wieder entsperrt. Wer das einschaltet, muss
 Sperren konsequent in GitLab abbilden.
 
+### Redirect-URI
+
+Die URI, die in der GitLab-Application eingetragen wird, ist der **Login-Pfad
+dieser Installation**, nicht `/typo3/index.php`:
+
+| Setup | Redirect-URI |
+|---|---|
+| eigener Backend-Host (`BE/entryPoint`) | `https://cms.example.com/login` |
+| Backend unter der Hauptdomain | `https://www.example.com/typo3/login` |
+
+Ohne Query-String eintragen. GitLab (Doorkeeper) vergleicht die Query nur, wenn
+die registrierte URI selbst eine hat — und die Extension haengt bei jedem Login
+einen anderen `request-token` an.
+
+`mfc/oauth2` selbst baut den Rueckweg auf den festverdrahteten Pfad
+`/typo3/index.php`. Dieses Einstiegsskript gibt es in TYPO3 v14 nicht mehr; der
+Callback laeuft dort in einen 404, **nachdem** der Benutzer bei GitLab schon
+zugestimmt hat. Bis davor sieht alles gesund aus. `useGitLabBackendLogin()`
+registriert deshalb `Moselwal\OAuth2\GitLabResourceServer`, eine Ableitung, die
+den Pfad aus dem laufenden Request nimmt. Sobald ein `mfc/oauth2`-Release den
+Fehler behebt, kann die Klasse weg.
+
 ### Was die Methode sonst noch anfasst
 
 - `BE/cookieSameSite` wird auf `lax` gesetzt. Der OAuth2-Rueckweg von GitLab ist eine
