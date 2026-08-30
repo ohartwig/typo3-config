@@ -8,7 +8,8 @@ declare(strict_types=1);
 
 namespace Moselwal;
 
-use Mfc\OAuth2\ResourceServer\GitLab as GitLabResourceServer;
+use Mfc\OAuth2\ResourceServer\GitLab as UpstreamGitLabResourceServer;
+use Moselwal\OAuth2\GitLabResourceServer;
 use Mfc\OAuth2\ResourceServer\Registry as OAuth2ResourceServerRegistry;
 use Moselwal\KeyValueStore\Cache\Backend\KeyValueBackend;
 use Moselwal\KeyValueStore\Locking\KeyValueLockingStrategy;
@@ -1337,7 +1338,7 @@ class Config implements ConfigInterface
         ?string $appId = null,
         ?string $appSecret = null,
     ): self {
-        if (!class_exists(OAuth2ResourceServerRegistry::class) || !class_exists(GitLabResourceServer::class)) {
+        if (!class_exists(OAuth2ResourceServerRegistry::class) || !class_exists(UpstreamGitLabResourceServer::class)) {
             return $this;
         }
 
