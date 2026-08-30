@@ -1,3 +1,9 @@
+## [5.8.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.0...v5.8.1) (2026-08-30)
+
+### :bug: Fixes
+
+* **login:** den GitLab-Rueckweg auf einen Pfad legen, den es gibt ([bb734ce](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/bb734ceeb3df6e4e53818e540c8ea9a83ad91cf0))
+
 ## [5.8.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.7.7...v5.8.0) (2026-08-28)
 
 ### :sparkles: Features
