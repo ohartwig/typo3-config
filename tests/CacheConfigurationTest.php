@@ -94,4 +94,29 @@ class CacheConfigurationTest extends ConfigTestCase
             'cluster_meta must not be registered when the extension is absent',
         );
     }
+
+    public function testSetAlternativeCachePathCoversTheFourDefaultCaches(): void
+    {
+        // Der Sinn der Methode ist, die Caches von einem NFS-Mount wegzuholen.
+        // Welche vier das ohne Angabe sind, steht nur hier - und wenn die
+        // Liste sich aendert, soll das eine Entscheidung sein und kein
+        // Nebeneffekt.
+        (new Config())->setAlternativeCachePath('/dev/shm/typo3');
+
+        $caches = $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'];
+
+        foreach (['cache_core', 'fluid_template', 'assets', 'l10n'] as $name) {
+            self::assertSame('/dev/shm/typo3', $caches[$name]['options']['cacheDirectory'], $name);
+        }
+    }
+
+    public function testSetAlternativeCachePathAcceptsAnExplicitList(): void
+    {
+        (new Config())->setAlternativeCachePath('/dev/shm/typo3', ['assets']);
+
+        $caches = $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'];
+
+        self::assertSame('/dev/shm/typo3', $caches['assets']['options']['cacheDirectory']);
+        self::assertArrayNotHasKey('cache_core', $caches);
+    }
 }
