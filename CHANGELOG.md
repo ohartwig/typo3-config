@@ -1,3 +1,9 @@
+## [5.8.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.1...v5.8.2) (2026-08-31)
+
+### :bug: Fixes
+
+* **logging:** nach stderr statt in Dateien, die niemand liest ([999aabb](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/999aabb25b5e2ce0cf3e22b6e578cf55e3affad7))
+
 ## [5.8.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.0...v5.8.1) (2026-08-30)
 
 ### :bug: Fixes
