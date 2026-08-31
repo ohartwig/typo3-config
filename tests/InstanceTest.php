@@ -55,4 +55,46 @@ class InstanceTest extends ConfigTestCase
         // Should only append the context suffix once, not three times
         self::assertSame('Acme - Testing', $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']);
     }
+
+    #[Test]
+    public function initializeDatabaseConnectionOhneOptionenAendertNichts(): void
+    {
+        // null ist der Normalfall im Aufrufpfad: die Optionen kommen aus einer
+        // Umgebungsvariablen, die auf vielen Mandanten nicht gesetzt ist. Ein
+        // Ueberschreiben mit einem leeren Array haette dort die Verbindung
+        // zerlegt.
+        $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = ['driver' => 'pdo_mysql'];
+
+        (new Config())->initializeDatabaseConnection(null);
+
+        self::assertSame(['driver' => 'pdo_mysql'], $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']);
+    }
+
+    #[Test]
+    public function initializeDatabaseConnectionMischtInDieBestehendeVerbindung(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = [
+            'driver' => 'pdo_mysql',
+            'dbname' => 'typo3',
+        ];
+
+        (new Config())->initializeDatabaseConnection(['dbname' => 'anders', 'port' => 3307]);
+
+        self::assertSame(
+            ['driver' => 'pdo_mysql', 'dbname' => 'anders', 'port' => 3307],
+            $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'],
+        );
+    }
+
+    #[Test]
+    public function initializeDatabaseConnectionTrifftDieBenannteVerbindung(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = ['driver' => 'pdo_mysql'];
+        $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Zweite'] = ['driver' => 'pdo_mysql'];
+
+        (new Config())->initializeDatabaseConnection(['dbname' => 'zweite'], 'Zweite');
+
+        self::assertSame('zweite', $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Zweite']['dbname']);
+        self::assertArrayNotHasKey('dbname', $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']);
+    }
 }

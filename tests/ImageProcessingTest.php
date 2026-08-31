@@ -109,4 +109,40 @@ class ImageProcessingTest extends ConfigTestCase
 
         self::assertSame('jpg,webp', $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']);
     }
+
+    public function testUseImageMagickSwitchesProcessorAndPaths(): void
+    {
+        // processor_path_lzw wird gern vergessen; TYPO3 ruft darueber die
+        // Kompression auf, und ein leerer Wert laesst die Bildbearbeitung
+        // stillschweigend im Original stehen.
+        $config = new Config();
+        $result = $config->useImageMagick('/opt/homebrew/bin/');
+
+        self::assertSame($config, $result, 'useImageMagick must return $this for fluent chaining');
+        self::assertSame('ImageMagick', $GLOBALS['TYPO3_CONF_VARS']['GFX']['processor']);
+        self::assertSame('/opt/homebrew/bin/', $GLOBALS['TYPO3_CONF_VARS']['GFX']['processor_path']);
+        self::assertSame('/opt/homebrew/bin/', $GLOBALS['TYPO3_CONF_VARS']['GFX']['processor_path_lzw']);
+    }
+
+    public function testUseImageMagickDefaultsToUsrBin(): void
+    {
+        (new Config())->useImageMagick();
+
+        self::assertSame('/usr/bin/', $GLOBALS['TYPO3_CONF_VARS']['GFX']['processor_path']);
+    }
+
+    public function testUseGraphicsMagickOverridesAPreviousImageMagick(): void
+    {
+        // applyDefaults() setzt GraphicsMagick. Wer danach ImageMagick waehlt
+        // und spaeter zurueckwechselt, muss wieder vollstaendig dort landen -
+        // ein halb umgestellter processor ist der Fall, den man im Betrieb
+        // nicht sieht.
+        $config = new Config();
+        $config->useImageMagick('/opt/im/');
+        $config->useGraphicsMagick('/opt/gm/');
+
+        self::assertSame('GraphicsMagick', $GLOBALS['TYPO3_CONF_VARS']['GFX']['processor']);
+        self::assertSame('/opt/gm/', $GLOBALS['TYPO3_CONF_VARS']['GFX']['processor_path']);
+        self::assertSame('/opt/gm/', $GLOBALS['TYPO3_CONF_VARS']['GFX']['processor_path_lzw']);
+    }
 }
