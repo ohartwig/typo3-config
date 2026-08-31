@@ -146,16 +146,91 @@ class Config implements ConfigInterface
         }
 
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemLogLevel'] = 0;
-        $this->enableDeprecationLogging();
-        $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration'] = [
-            \TYPO3\CMS\Core\Log\LogLevel::DEBUG => [
-                \TYPO3\CMS\Core\Log\Writer\FileWriter::class => [
-                    'logFile' => 'var/logs/error.log',
-                ],
-            ],
-        ];
+
+        // Das Deprecation-Log haengt an einem eigenen FileWriter. Es stand
+        // hier unbedingt an, also auch im Produktions-CLI: jeder
+        // Scheduler-Lauf im Container schrieb var/log/deprecations_*.log,
+        // eine Datei, die waechst und die niemand liest. Beide
+        // Produktions-Presets schalten das Log ab - nur der CLI-Pfad fiel
+        // durchs Raster, weil applyDefaults() bei SAPI=cli gar nicht erst in
+        // den Produktionszweig laeuft. Lokal bleibt es an, da ist die Datei
+        // gewollt und wird auch gelesen.
+        if ($isLooseCliContext) {
+            $this->enableDeprecationLogging();
+        } else {
+            $this->disableDeprecationLogging();
+        }
+
+        // Nach stderr, nicht in eine Datei.
+        //
+        // Hier stand ein FileWriter auf 'var/logs/error.log'. Das Verzeichnis
+        // heisst bei TYPO3 var/log/ (Einzahl) und wurde nirgends angelegt -
+        // auf keinem Mandanten der Flotte. Der Writer schrieb also ins Leere,
+        // und jede Ausnahme aus einem CLI-Lauf (Scheduler, Kommandos) war
+        // unsichtbar. Aufgefallen ist das erst, als eine Fehlersuche daran
+        // scheiterte, dass es kein Log gab.
+        //
+        // Eine Datei waere auch bei richtigem Pfad falsch: im Container liest
+        // sie niemand, sie waechst mit, und sie ueberlebt den Pod nicht. Was
+        // stderr erreicht, sammelt die Log-Pipeline ein.
+        $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration'] = $this->writeToStdErr(
+            $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration'] ?? []
+        );
 
         return $this;
+    }
+
+    /**
+     * Alles ab ERROR nach stderr, und keine Datei.
+     *
+     * Der Fehler war, dass die Presets den FileWriter nie erwaehnten. Sie
+     * setzten nur PhpErrorLogWriter, waehrend TYPO3s eigene Vorgabe
+     * `warning => FileWriter` unangetastet daneben stehen blieb und weiter
+     * Dateien schrieb. Deshalb wird er hier auf jeder Stufe ausdruecklich
+     * abgeschaltet.
+     *
+     * Die erzwungenen Werte stehen als ZWEITES Argument von
+     * array_replace_recursive, damit sie die Vorgabe verdraengen statt von ihr
+     * verdraengt zu werden. Am konkreten Fehler oben aenderte die Reihenfolge
+     * nichts - TYPO3 liefert dort kein 'disabled', an dem sie sich haette
+     * reiben koennen. Sie entspricht aber der Absicht: was das Preset setzt,
+     * gilt; wer es danach in seiner additional.php anders will, ueberschreibt
+     * es dort.
+     *
+     * @param array<string, mixed> $existing
+     * @return array<string, mixed>
+     */
+    private function writeToStdErr(array $existing): array
+    {
+        // Alle acht Stufen, nicht nur die vier, die frueher hier standen. Ein
+        // Writer faengt seine Stufe UND alles Schwerere - ein FileWriter auf
+        // 'notice' schriebe also weiter Dateien, obwohl 'warning' abwaerts
+        // abgeschaltet ist. Deshalb wird der FileWriter ueberall ausdruecklich
+        // stillgelegt.
+        //
+        // Der PhpErrorLogWriter genuegt auf ERROR: von dort faengt er error,
+        // critical, alert und emergency mit. Genau darauf kommt es an -
+        // TYPO3s ProductionExceptionHandler meldet die "Oops"-Ausnahmen aus
+        // Inhaltselementen auf Stufe alert.
+        //
+        // Betrifft nur die Wurzel-Konfiguration. Eigene writerConfiguration
+        // unterhalb von LOG.TYPO3.CMS.* - etwa das Auth-Log - bleiben, wie
+        // sie sind; die haben ihre eigene Begruendung.
+        $forced = [];
+        foreach ([LogLevel::EMERGENCY, LogLevel::ALERT, LogLevel::CRITICAL, LogLevel::ERROR] as $level) {
+            $forced[$level] = [
+                PhpErrorLogWriter::class => ['disabled' => $level !== LogLevel::ERROR],
+                FileWriter::class => ['disabled' => true],
+            ];
+        }
+        foreach ([LogLevel::WARNING, LogLevel::NOTICE, LogLevel::INFO, LogLevel::DEBUG] as $level) {
+            $forced[$level] = [
+                PhpErrorLogWriter::class => ['disabled' => true],
+                FileWriter::class => ['disabled' => true],
+            ];
+        }
+
+        return array_replace_recursive($existing, $forced);
     }
 
     /**
@@ -171,22 +246,8 @@ class Config implements ConfigInterface
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['belogErrorReporting'] = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['exceptionalErrors'] = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
         $this->disableDeprecationLogging();
-        $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration'] = array_replace_recursive(
-            [
-                LogLevel::DEBUG => [
-                    PhpErrorLogWriter::class => ['disabled' => true],
-                ],
-                LogLevel::INFO => [
-                    PhpErrorLogWriter::class => ['disabled' => true],
-                ],
-                LogLevel::WARNING => [
-                    PhpErrorLogWriter::class => ['disabled' => true],
-                ],
-                LogLevel::ERROR => [
-                    PhpErrorLogWriter::class => ['disabled' => false],
-                ],
-            ],
-            $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration']
+        $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration'] = $this->writeToStdErr(
+            $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration'] ?? []
         );
         return $this;
     }

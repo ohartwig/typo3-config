@@ -33,11 +33,20 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
-    <coverage>
+    <!--
+        Der Filter gehoert seit PHPUnit 10 in <source>, nicht mehr unter
+        <coverage>. Dort stehend wurde er stillschweigend ignoriert: PHPUnit
+        meldete "No filter is configured, code coverage will not be processed",
+        und weil failOnWarning greift, scheiterte test:phpunit:unit mit exit 1,
+        obwohl jeder Test gruen war. Ohne Filter entstand ausserdem keine
+        coverage.cobertura.xml - deshalb liefen auch test:coverage:gate und
+        test:infection ins Leere.
+    -->
+    <source>
         <include>
             <directory suffix=".php">src</directory>
         </include>
-    </coverage>
+    </source>
     <php>
         <env name="TYPO3_CONTEXT" value="Testing"/>
     </php>
