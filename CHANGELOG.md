@@ -1,3 +1,9 @@
+## [5.8.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.2...v5.8.3) (2026-09-01)
+
+### :bug: Fixes
+
+* **ci:** Infection die Coverage des Unit-Jobs weiterreichen ([4fed0ca](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/4fed0ca14f0232340c3cf340f710a5e0180616ea))
+
 ## [5.8.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.1...v5.8.2) (2026-08-31)
 
 ### :bug: Fixes
