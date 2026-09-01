@@ -1,0 +1,46 @@
+{
+  // Quellverzeichnis und Ausschluesse sind dieselben, die der Job bisher aus
+  // der PSR-4-Angabe (Moselwal\ => src) abgeleitet hat. Sie stehen hier nur
+  // deshalb, weil eine committete Konfiguration die Ableitung ersetzt - nicht,
+  // weil sich etwas aendert.
+  "source": {
+    "directories": [
+      "src"
+    ],
+    "excludes": [
+      "*/Tests/*",
+      "*/Fixtures/*"
+    ]
+  },
+  "testFramework": "phpunit",
+
+  // Infections Vorgabe sind 10 Sekunden je Testprozess. Dieser Wert hat den
+  // Job bisher zum Scheitern gebracht, allerdings an anderer Stelle als man
+  // denkt: er gilt auch fuer den INITIALEN Testlauf, und der laeuft mit
+  // --coverage-xml unter Xdebug. PHPUnit wurde dort nach 22 von 72 Tests mit
+  // SIGTERM abgeraeumt (exit 143), was Infection als "Tests sind nicht gruen"
+  // meldete.
+  //
+  // Dieser initiale Lauf ist weg: .gitlab-ci.yml reicht die Coverage aus
+  // test:phpunit:unit herein. Der Wert hier deckt jetzt nur noch die
+  // Mutantenlaeufe ab, und die sind guenstig - die Suite braucht ohne Coverage
+  // rund 0,07 s, ein Mutant faehrt davon nur die Tests, die seine Zeile
+  // abdecken.
+  //
+  // 30 ist deshalb Luft und keine gemessene Untergrenze: Spitzenlast auf einem
+  // Spot-Runner soll nicht als Timeout erscheinen. Anders als bei
+  // typo3-mcp-server, wo 120 aus einer Messreihe gegen eine Funktionssuite
+  // stammt, gibt es hier nichts zu optimieren - waere der Wert knapp, wuerde
+  // die Ueberspringquote es melden, und der Job weigert sich ohnehin, einen
+  // Wert auszuweisen, wenn zu viele Mutanten uebersprungen wurden.
+  "timeout": 30,
+
+  "logs": {
+    "text": "var/infection/infection.log",
+    "html": "var/infection/infection.html",
+    "summary": "var/infection/summary.log"
+  },
+  "mutators": {
+    "@default": true
+  }
+}
