@@ -1,3 +1,13 @@
+## [5.8.4](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.3...v5.8.4) (2026-09-02)
+
+### :bug: Fixes
+
+* **deps:** update dependency php to ^8.5.10 ([c5ea578](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/c5ea578cb5ce75a01a5f181f4c6a4bf4e974d255))
+
+### :repeat: Chores
+
+* **ci:** Coverage ueber Eingaben statt ueber Job-Overrides ([95661ca](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/95661caa5f8d1ecbf23743f32ccce2924f9f8555))
+
 ## [5.8.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.2...v5.8.3) (2026-09-01)
 
 ### :bug: Fixes
