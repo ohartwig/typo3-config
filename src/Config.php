@@ -1231,7 +1231,10 @@ class Config implements ConfigInterface
             $candidateCert = $tlsDir . '/' . $name . '.crt';
             $candidateKey = $tlsDir . '/' . $name . '.key';
 
-            if (is_readable($candidateCa) && is_readable($candidateCert) && is_readable($candidateKey)) {
+            if (self::certIsReadable($candidateCa)
+                && self::certIsReadable($candidateCert)
+                && self::certIsReadable($candidateKey)
+            ) {
                 $caFile = $candidateCa;
                 $certFile = $candidateCert;
                 $keyFile = $candidateKey;
@@ -1262,7 +1265,15 @@ class Config implements ConfigInterface
         }
 
         // Only apply if all files are readable (avoid breaking non-mTLS environments).
-        if (!is_readable($caFile) || !is_readable($certFile) || !is_readable($keyFile)) {
+        // Through certIsReadable(), so a rotation does not make a present
+        // certificate look missing here either. This guard keeps its silent
+        // return: unlike valkey, MariaDB accepts an unencrypted connection, so
+        // turning this into a hard failure is a separate decision with a
+        // different blast radius and does not belong in this fix.
+        if (!self::certIsReadable($caFile)
+            || !self::certIsReadable($certFile)
+            || !self::certIsReadable($keyFile)
+        ) {
             return;
         }
 
@@ -1552,6 +1563,34 @@ class Config implements ConfigInterface
     }
 
     /**
+     * `is_readable()` through a cleared stat cache.
+     *
+     * Kubernetes replaces a projected secret by swapping the `..data` symlink,
+     * and PHP caches stat results per path -- the realpath cache included. A
+     * FrankenPHP worker outlives such a swap, so it can answer from an entry for
+     * the replaced inode and report a perfectly readable certificate as missing.
+     *
+     * On 2026-09-03 that window was ten seconds wide in `kunde-findready`, right
+     * after cert-manager renewed `findready-app-tls`: the certificates read as
+     * unreadable, mTLS was skipped, and eight connections were rejected by
+     * valkey with `SSL routines::wrong version number` while TYPO3 reported
+     * `RedisException: read error on connection to cache:6379`. The swap itself
+     * is atomic -- at every instant the path resolves to one complete directory
+     * or the other -- so clearing the cache is the whole fix; there is nothing
+     * to wait for and no retry here.
+     */
+    private static function certIsReadable(string $path): bool
+    {
+        if ('' === $path) {
+            return false;
+        }
+
+        clearstatcache(true, $path);
+
+        return is_readable($path);
+    }
+
+    /**
      * Autoconfigure Redis/Valkey TLS/mTLS options for moselwal/keyvalue-store if certificate files are present.
      *
      * Returns an options array compatible with KeyValueConnectionFactory:
@@ -1563,7 +1602,16 @@ class Config implements ConfigInterface
      *  2) Explicit paths: KEYVALUE_SSL_CA / KEYVALUE_SSL_CERT / KEYVALUE_SSL_KEY
      *  3) Conventional defaults: /run/tls/ca.crt + /run/tls/httpd.crt + /run/tls/httpd.key
      *
+     * No CA anywhere means the deployment does not do internal TLS at all and an
+     * empty array is the right answer -- a local compose stack runs valkey
+     * without it. A CA that IS present and a client identity that is not is a
+     * fault, and this method says so instead of handing back an empty array:
+     * that array drops `tls` and downgrades the connection to plaintext.
+     *
      * @return array<string, mixed>
+     *
+     * @throws \RuntimeException when internal TLS is in use but the client
+     *                            certificate or key cannot be read
      */
     private function autoconfigureKeyValueMtlsOptions(string $host): array
     {
@@ -1589,7 +1637,10 @@ class Config implements ConfigInterface
             $candidateCert = $tlsDir . '/' . $name . '.crt';
             $candidateKey = $tlsDir . '/' . $name . '.key';
 
-            if (is_readable($candidateCa) && is_readable($candidateCert) && is_readable($candidateKey)) {
+            if (self::certIsReadable($candidateCa)
+                && self::certIsReadable($candidateCert)
+                && self::certIsReadable($candidateKey)
+            ) {
                 $caFile = $candidateCa;
                 $certFile = $candidateCert;
                 $keyFile = $candidateKey;
@@ -1617,8 +1668,33 @@ class Config implements ConfigInterface
             $keyFile = '/run/tls/httpd.key';
         }
 
-        if (!is_readable($caFile) || !is_readable($certFile) || !is_readable($keyFile)) {
+        if (!self::certIsReadable($caFile)) {
+            // No CA at all: this deployment does not do internal TLS. A local
+            // compose stack runs valkey without it, and plaintext is correct there.
             return [];
+        }
+
+        // The CA is there, so this deployment DOES do internal TLS. A missing
+        // client identity is then a fault, not a configuration. Returning an
+        // empty array here would silently downgrade the connection to plaintext:
+        // valkey runs tls-port only, so it rejects that with `wrong version
+        // number` while TYPO3 reports `read error on connection` from somewhere
+        // deep in a Fluid render -- and the `password` below would have gone
+        // onto the wire in the clear on any server that did accept it.
+        $missing = [];
+        if (!self::certIsReadable($certFile)) {
+            $missing[] = $certFile;
+        }
+        if (!self::certIsReadable($keyFile)) {
+            $missing[] = $keyFile;
+        }
+        if ([] !== $missing) {
+            throw new \RuntimeException(sprintf(
+                'KeyValue mTLS is configured -- %s is readable -- but the client identity is not: %s. '
+                . 'Refusing to fall back to an unencrypted connection.',
+                $caFile,
+                implode(', ', $missing)
+            ));
         }
 
         // peer_name should match the server certificate CN/SAN; allow override.
