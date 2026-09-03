@@ -1195,6 +1195,13 @@ class Config implements ConfigInterface
      *
      * This configures the `DB/Connections/Default/driverOptions` array so PDO uses TLS with
      * client certificate authentication (mTLS) when the files exist.
+     *
+     * No CA present means no internal TLS in this deployment and the connection
+     * is left alone. A readable CA with an unreadable client identity is a fault
+     * and throws rather than silently connecting unencrypted.
+     *
+     * @throws \RuntimeException when internal TLS is in use but the client
+     *                            certificate or key cannot be read
      */
     private function autoconfigureDatabaseMtls(string $connectionName = 'Default'): void
     {
@@ -1264,17 +1271,33 @@ class Config implements ConfigInterface
             $keyFile = '/run/tls/httpd.key';
         }
 
-        // Only apply if all files are readable (avoid breaking non-mTLS environments).
-        // Through certIsReadable(), so a rotation does not make a present
-        // certificate look missing here either. This guard keeps its silent
-        // return: unlike valkey, MariaDB accepts an unencrypted connection, so
-        // turning this into a hard failure is a separate decision with a
-        // different blast radius and does not belong in this fix.
-        if (!self::certIsReadable($caFile)
-            || !self::certIsReadable($certFile)
-            || !self::certIsReadable($keyFile)
-        ) {
+        // Same rule as the KeyValue side, and for the same reason. No CA means
+        // this deployment does not do internal TLS -- a local compose stack, and
+        // an unencrypted connection is correct there.
+        if (!self::certIsReadable($caFile)) {
             return;
+        }
+
+        // A CA that IS readable says this deployment does mTLS, so a missing
+        // client identity is a fault. This one matters MORE than the cache: the
+        // server on the other end is MariaDB, which happily accepts an
+        // unencrypted connection. valkey refuses one and turns a downgrade into
+        // a visible failure; MariaDB would have carried the credentials and
+        // every row in the clear, and nothing anywhere would have said so.
+        $missing = [];
+        if (!self::certIsReadable($certFile)) {
+            $missing[] = $certFile;
+        }
+        if (!self::certIsReadable($keyFile)) {
+            $missing[] = $keyFile;
+        }
+        if ([] !== $missing) {
+            throw new \RuntimeException(sprintf(
+                'Database mTLS is configured -- %s is readable -- but the client identity is not: %s. '
+                . 'Refusing to fall back to an unencrypted connection.',
+                $caFile,
+                implode(', ', $missing)
+            ));
         }
 
         // PHP 8.5+: Pdo\Mysql constants, fallback to PDO constants for older PHP

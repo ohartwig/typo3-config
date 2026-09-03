@@ -190,6 +190,38 @@ class MtlsConfigurationTest extends ConfigTestCase
         $config->autoconfigureCaching();
     }
 
+    /**
+     * The database counterpart. It matters more than the cache one: MariaDB
+     * accepts an unencrypted connection, so a silent downgrade there carried the
+     * credentials and every row in the clear with nothing to show for it.
+     */
+    #[Test]
+    public function loadCoreSecretsThrowsWhenCaIsPresentButClientIdentityIsNot(): void
+    {
+        $getenv = $this->getFunctionMock('Moselwal', 'getenv');
+        $getenv->expects(self::any())->willReturnCallback(function (string $key) {
+            $map = [
+                'DB_USER' => 'test-user',
+                'DB_PASSWORD' => 'test-password',
+                'ENCRYPTION_KEY' => 'test-key',
+                'INSTALL_TOOL_PASSWORD' => 'test-pw',
+            ];
+            return $map[$key] ?? false;
+        });
+
+        $isReadable = $this->getFunctionMock('Moselwal', 'is_readable');
+        $isReadable->expects(self::any())->willReturnCallback(
+            static fn (string $path): bool => $path === '/run/tls/ca.crt'
+        );
+
+        $config = TestableConfig::initializeWithVersion(12);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Refusing to fall back to an unencrypted connection');
+
+        $config->loadCoreSecrets();
+    }
+
     #[Test]
     public function loadMailSecretsConfiguresMailSettings(): void
     {
