@@ -153,6 +153,43 @@ class MtlsConfigurationTest extends ConfigTestCase
         }
     }
 
+    /**
+     * The regression from 2026-09-03: a readable CA and an unreadable client
+     * identity used to return an empty options array, which dropped `tls` and
+     * left the caller connecting in plaintext -- with `password` still set.
+     */
+    #[Test]
+    public function autoconfigureKeyValueMtlsThrowsWhenCaIsPresentButClientIdentityIsNot(): void
+    {
+        $getenv = $this->getFunctionMock('Moselwal', 'getenv');
+        $getenv->expects(self::any())->willReturnCallback(function (string $key) {
+            $map = [
+                'KEYVALUE_HOST' => 'cache',
+                'KEYVALUE_PORT' => '6379',
+                'KEYVALUE_PASSWORD' => 'redis-pw',
+            ];
+            return $map[$key] ?? false;
+        });
+
+        $isReadable = $this->getFunctionMock('Moselwal', 'is_readable');
+        $isReadable->expects(self::any())->willReturnCallback(
+            static fn (string $path): bool => $path === '/run/tls/ca.crt'
+        );
+
+        $classExists = $this->getFunctionMock('Moselwal', 'class_exists');
+        $classExists->expects(self::any())->willReturn(true);
+
+        $functionExists = $this->getFunctionMock('Moselwal', 'function_exists');
+        $functionExists->expects(self::any())->willReturn(false);
+
+        $config = TestableConfig::initializeWithVersion(12);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Refusing to fall back to an unencrypted connection');
+
+        $config->autoconfigureCaching();
+    }
+
     #[Test]
     public function loadMailSecretsConfiguresMailSettings(): void
     {
