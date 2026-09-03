@@ -153,6 +153,75 @@ class MtlsConfigurationTest extends ConfigTestCase
         }
     }
 
+    /**
+     * The regression from 2026-09-03: a readable CA and an unreadable client
+     * identity used to return an empty options array, which dropped `tls` and
+     * left the caller connecting in plaintext -- with `password` still set.
+     */
+    #[Test]
+    public function autoconfigureKeyValueMtlsThrowsWhenCaIsPresentButClientIdentityIsNot(): void
+    {
+        $getenv = $this->getFunctionMock('Moselwal', 'getenv');
+        $getenv->expects(self::any())->willReturnCallback(function (string $key) {
+            $map = [
+                'KEYVALUE_HOST' => 'cache',
+                'KEYVALUE_PORT' => '6379',
+                'KEYVALUE_PASSWORD' => 'redis-pw',
+            ];
+            return $map[$key] ?? false;
+        });
+
+        $isReadable = $this->getFunctionMock('Moselwal', 'is_readable');
+        $isReadable->expects(self::any())->willReturnCallback(
+            static fn (string $path): bool => $path === '/run/tls/ca.crt'
+        );
+
+        $classExists = $this->getFunctionMock('Moselwal', 'class_exists');
+        $classExists->expects(self::any())->willReturn(true);
+
+        $functionExists = $this->getFunctionMock('Moselwal', 'function_exists');
+        $functionExists->expects(self::any())->willReturn(false);
+
+        $config = TestableConfig::initializeWithVersion(12);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Refusing to fall back to an unencrypted connection');
+
+        $config->autoconfigureCaching();
+    }
+
+    /**
+     * The database counterpart. It matters more than the cache one: MariaDB
+     * accepts an unencrypted connection, so a silent downgrade there carried the
+     * credentials and every row in the clear with nothing to show for it.
+     */
+    #[Test]
+    public function loadCoreSecretsThrowsWhenCaIsPresentButClientIdentityIsNot(): void
+    {
+        $getenv = $this->getFunctionMock('Moselwal', 'getenv');
+        $getenv->expects(self::any())->willReturnCallback(function (string $key) {
+            $map = [
+                'DB_USER' => 'test-user',
+                'DB_PASSWORD' => 'test-password',
+                'ENCRYPTION_KEY' => 'test-key',
+                'INSTALL_TOOL_PASSWORD' => 'test-pw',
+            ];
+            return $map[$key] ?? false;
+        });
+
+        $isReadable = $this->getFunctionMock('Moselwal', 'is_readable');
+        $isReadable->expects(self::any())->willReturnCallback(
+            static fn (string $path): bool => $path === '/run/tls/ca.crt'
+        );
+
+        $config = TestableConfig::initializeWithVersion(12);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Refusing to fall back to an unencrypted connection');
+
+        $config->loadCoreSecrets();
+    }
+
     #[Test]
     public function loadMailSecretsConfiguresMailSettings(): void
     {
