@@ -1,3 +1,10 @@
+## [5.8.6](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.5...v5.8.6) (2026-09-03)
+
+### :bug: Fixes
+
+* **database:** auch die Datenbankverbindung faellt nicht mehr auf Klartext zurueck ([241074f](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/241074ffd28639dd4a8c459f6886058209ca0a92))
+* **keyvalue:** kein stiller Rueckfall auf Klartext bei der Cache-Verbindung ([3b88837](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/3b88837390705e87a320d03a18035cd08bb97179))
+
 ## [5.8.5](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.4...v5.8.5) (2026-09-03)
 
 ### :repeat: Chores
