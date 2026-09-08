@@ -1,3 +1,13 @@
+## [5.8.7](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.6...v5.8.7) (2026-09-08)
+
+### :bug: Fixes
+
+* **config-loader:** Cache-Key um TYPO3__*-Fingerprint erweitern ([2362b31](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/2362b3108f270b7a3f2579a350c0885da454bbeb))
+
+### :repeat: Chores
+
+* **deps:** update dependency devops/ci-cd-components/composed-default-pipelines to v2 ([9747119](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/974711983cf6117a1979326da328c382d611d599))
+
 ## [5.8.6](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.5...v5.8.6) (2026-09-03)
 
 ### :bug: Fixes
