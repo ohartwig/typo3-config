@@ -330,11 +330,7 @@ class Config implements ConfigInterface
         // The Config will be cached!
         if (class_exists(\Helhum\ConfigLoader\CachedConfigurationLoader::class)) {
             $cacheDir = Environment::getVarPath() . '/cache/data';
-            $cacheIdentifier = md5(implode('|', [
-                (string)filemtime(Environment::getProjectPath() . '/.env'),
-                getenv('BUILD_DATE'),
-                (string)$this->context
-            ]));
+            $cacheIdentifier = $this->configLoaderCacheIdentifier();
             // Use the TYPO3 project root so the TYPO3 env reader maps TYPO3__* variables correctly
             $configReaderFactory = new \Helhum\ConfigLoader\ConfigurationReaderFactory(\TYPO3\CMS\Core\Core\Environment::getProjectPath());
             $configLoader = new \Helhum\ConfigLoader\CachedConfigurationLoader(
@@ -363,6 +359,45 @@ class Config implements ConfigInterface
             );
         }
         return $this;
+    }
+
+    /**
+     * Cache identifier for the env-driven configuration overrides.
+     *
+     * The cached array IS the environment: whatever TYPO3__* variables the
+     * process that wrote the cache could see is what every later process
+     * reads back. Until 2026-09-08 the key was only .env mtime + BUILD_DATE +
+     * context, so the k3s init container (typo3-setup, no
+     * TYPO3__EXTENSIONS__* variables) wrote the cache first and the app
+     * container, which carries them, silently reused it -- the frankenphp
+     * purge kept calling caddy-proxy.internal:2019 although its env said
+     * caddy-proxy:443. Measured on kunde-xebro: cache file 187 bytes, written
+     * 18 s before the app container started.
+     *
+     * The fingerprint over every TYPO3__* variable (name and value, sorted)
+     * makes two processes with different overrides use two cache entries.
+     * getenv() is used rather than $_ENV so the key does not depend on
+     * variables_order.
+     */
+    final public function configLoaderCacheIdentifier(): string
+    {
+        $overrides = array_filter(
+            getenv(),
+            static fn (string $name): bool => str_starts_with($name, 'TYPO3__'),
+            ARRAY_FILTER_USE_KEY
+        );
+        ksort($overrides);
+
+        // No .env in the k3s image: filemtime() on a missing file warned on
+        // every request before this guard.
+        $envFile = Environment::getProjectPath() . '/.env';
+
+        return md5(implode('|', [
+            is_file($envFile) ? (string)filemtime($envFile) : '',
+            (string)getenv('BUILD_DATE'),
+            (string)$this->context,
+            md5(serialize($overrides)),
+        ]));
     }
 
     /**

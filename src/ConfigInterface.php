@@ -15,6 +15,8 @@ public function useDevelopmentPreset(): self;
 public function useFileFill(): self;
 /** @param array<string, int> $forbiddenKeys */
 public function useConfigLoader(array $forbiddenKeys = []): self;
+/** Cache key of the env-override cache: .env mtime, BUILD_DATE, context and a fingerprint of every TYPO3__* variable. */
+public function configLoaderCacheIdentifier(): string;
 public function useGraphicsMagick(string $path = '/usr/bin/'): self;
 public function useImageMagick(string $path = '/usr/bin/'): self;
 public function setImageQuality(int $jpeg, ?int $webp = null, ?int $avif = null, ?int $heif = null): self;
