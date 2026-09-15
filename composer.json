@@ -39,7 +39,7 @@
         "php-mock/php-mock-phpunit": "^2.15.0",
         "moselwal/keyvalue-store": "^4.5",
         "helhum/config-loader": "^0.12 || ^1.0",
-        "mfc/oauth2": "^4.3"
+        "mfc/oauth2": "^4.3.0"
     },
     "suggest": {
         "moselwal/keyvalue-store": "Redis/Valkey integration for caching, sessions, and locking",
