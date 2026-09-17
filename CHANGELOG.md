@@ -1,3 +1,17 @@
+## [5.8.9](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.8...v5.8.9) (2026-09-17)
+
+### :bug: Fixes
+
+* **deps:** update dependency composer/installers to ^2.3.0 ([49d4c30](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/49d4c30c04261a2553c354197b611259f828215d))
+
+### :repeat: Continuous Integrations
+
+* release with yasrt ([5eb9baf](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/5eb9baf002f0e8b454cc094935d43b974caf7dff))
+
+### :repeat: Chores
+
+* **deps:** update dependency mfc/oauth2 to ^4.3.0 ([bcacb2e](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/bcacb2e057dcbb211bdf72f0a44d10024f977a8e))
+
 ## [5.8.8](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.7...v5.8.8) (2026-09-10)
 
 ### :repeat: Chores
