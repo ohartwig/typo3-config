@@ -1,3 +1,9 @@
+## [5.8.10](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.9...v5.8.10) (2026-09-25)
+
+### :repeat: Chores
+
+* **deps:** update dependency ergebnis/composer-normalize to ^2.54.0 ([7c0d19a](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/7c0d19a6543af74858b1a6cf90ca0b012cba839f))
+
 ## [5.8.9](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.8...v5.8.9) (2026-09-17)
 
 ### :bug: Fixes
