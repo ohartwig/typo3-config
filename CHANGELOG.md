@@ -1,3 +1,9 @@
+## [5.8.11](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.10...v5.8.11) (2026-09-26)
+
+### :bug: Fixes
+
+* **deps:** update dependency php to ^8.5.11 ([de34bed](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/de34bed1dc1530b2c6cd7daa17aa5fe013a820c2))
+
 ## [5.8.10](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.9...v5.8.10) (2026-09-25)
 
 ### :repeat: Chores
