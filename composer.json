@@ -13,7 +13,6 @@
         {
             "name": "Kai Ole Hartwig",
             "email": "support@ole-hartwig.eu",
-            "homepage": "https://moselwal.de",
             "role": "Maintainer"
         },
         {
@@ -22,11 +21,10 @@
             "role": "Developer"
         }
     ],
-    "homepage": "https://moselwal.de",
+    "homepage": "https://github.com/ohartwig/typo3-config",
     "support": {
-        "issues": "https://github.com/Moselwal-Digitalagentur/typo3-config/issues",
-        "source": "https://github.com/Moselwal-Digitalagentur/typo3-config",
-        "docs": "https://moselwal.de/open-source/typo3-config"
+        "issues": "https://github.com/ohartwig/typo3-config/issues",
+        "source": "https://github.com/ohartwig/typo3-config"
     },
     "require": {
         "php": "^8.5.11",
