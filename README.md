@@ -2,7 +2,7 @@
 
 [![TYPO3 14](https://img.shields.io/badge/TYPO3-14.x-orange.svg)](https://get.typo3.org/)
 [![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://php.net/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL-2.0-or-later](https://img.shields.io/badge/License-GPL--2.0--or--later-blue.svg)](https://spdx.org/licenses/GPL-2.0-or-later.html)
 
 Fluent PHP API for environment-specific TYPO3 configuration. Provides context-based presets, secure secret management, caching, logging, mailer setup, and TLS/mTLS auto-configuration.
 
@@ -213,4 +213,6 @@ composer phpstan           # PHPStan Level 5 static analysis
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+GPL-2.0-or-later — see [LICENSE](LICENSE) for details. Releases up to and
+including v5.8.12 were published under the MIT License and remain available
+under it.

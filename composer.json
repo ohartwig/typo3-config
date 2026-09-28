@@ -1,7 +1,7 @@
 {
     "name": "moselwal/typo3-config",
     "description": "Fluent API to set environment-specific configuration for TYPO3.",
-    "license": "MIT",
+    "license": "GPL-2.0-or-later",
     "keywords": [
         "typo3",
         "configuration",

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * SPDX-License-Identifier: GPL-2.0-or-later
  * Copyright (C) 2026 Moselwal Digitalagentur GmbH
  * Copyright (C) 2026  Kai Ole Hartwig <mail@ole-hartwig.eu>
  */
