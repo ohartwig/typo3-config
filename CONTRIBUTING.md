@@ -58,5 +58,6 @@ Please do not report security problems in public issues; follow
 
 ## Licence
 
-By contributing you agree that your contribution is licensed under the MIT
-License, like the rest of the repository.
+By contributing you agree that your contribution is licensed under the GNU
+General Public License, version 2 or (at your option) any later version
+(GPL-2.0-or-later), like the rest of the repository.

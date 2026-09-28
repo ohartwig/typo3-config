@@ -1,3 +1,7 @@
+### :scroll: Licence
+
+The licence changed from MIT to GPL-2.0-or-later as of v5.9.0; earlier releases remain available under MIT.
+
 ## [5.8.12](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.11...v5.8.12) (2026-09-28)
 
 ### :memo: Documentation
