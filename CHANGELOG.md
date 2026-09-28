@@ -1,3 +1,18 @@
+## [5.9.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.12...v5.9.0) (2026-09-28)
+
+### :sparkles: Features
+
+* **license:** relicense the package under GPL-2.0-or-later ([9847541](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/9847541fee3ef6679cd44a36a85117b4dfc6eff4))
+
+### :repeat: Continuous Integrations
+
+* **deps:** update dependency devops/ci-cd-components/composed-default-pipelines to v2.21.3 ([d7bc406](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/d7bc406c5c78a68767d07295c99139f72fd1d3fd))
+* **deps:** update dependency devops/ci-cd-components/composed-default-pipelines to v2.21.2 ([482aa11](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/482aa113ed6da0ce9b31904d45efe0de38e7d0ef))
+
+### :repeat: Chores
+
+* **deps:** update dependency devops/ci-cd-components/composed-default-pipelines to v2.21.1 ([17de3dc](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/17de3dcfeea11b1eef6113c434a8fa62bb2d4255))
+
 ### :scroll: Licence
 
 The licence changed from MIT to GPL-2.0-or-later as of v5.9.0; earlier releases remain available under MIT.
