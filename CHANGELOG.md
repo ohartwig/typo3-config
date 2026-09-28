@@ -1,3 +1,17 @@
+## [5.8.12](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.11...v5.8.12) (2026-09-28)
+
+### :memo: Documentation
+
+* give the shell examples in CONTRIBUTING.md a language ([ac3319f](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/ac3319fa96f1c880e490f7f4e4fe78dc902139ba))
+* add full licence text, contribution guide and code of conduct ([bcc4538](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/bcc453862b3acab3454a8b36aa5d3726e8cefb18))
+
+### :repeat: Chores
+
+* **ci:** restore the GitHub mirror on release tags ([187ac32](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/187ac32faff9198ce2202b6d2a138cd13556218f))
+* point package metadata at the public GitHub repository ([e62b36e](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/e62b36ee23f1e39081a3c439c21cb1d2d22dd250))
+* **deps:** update dependency mstruebing/editorconfig-checker to v3.11.3 ([13c1d0e](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/13c1d0e2f73c5700ce71c2439abeaa82e08d60d8))
+* **deps:** update dependency davidanson/markdownlint-cli2 to v0.23.3 ([9b67d07](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/9b67d078a42ed0d037c65b0ce682861f85513de9))
+
 ## [5.8.11](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.10...v5.8.11) (2026-09-26)
 
 ### :bug: Fixes
