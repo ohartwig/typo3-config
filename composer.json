@@ -33,7 +33,7 @@
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.54.0",
-        "moselwal/dev-typo3": "^1.0",
+        "koh/dev-typo3": "^1.0",
         "php-mock/php-mock-phpunit": "^2.15.0",
         "moselwal/keyvalue-store": "^4.5",
         "helhum/config-loader": "^0.12 || ^1.0",
@@ -51,6 +51,13 @@
                 "moselwal/*",
                 "hn/typo3-mcp-server",
                 "netresearch/nr-passkeys-be"
+            ]
+        },
+        {
+            "type": "composer",
+            "url": "https://git.ole-hartwig.eu/api/v4/group/1091/-/packages/composer/packages.json",
+            "only": [
+                "koh/dev*"
             ]
         }
     ],
