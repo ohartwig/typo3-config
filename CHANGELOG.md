@@ -1,3 +1,9 @@
+## [5.9.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.9.1...v5.9.2) (2026-10-03)
+
+### :repeat: Chores
+
+* **deps:** update dependency php-mock/php-mock-phpunit to ^2.16.0 ([866f93e](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/866f93e7d6e317bdc349ba4ff6589a5fe721b8c0))
+
 ## [5.9.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.9.0...v5.9.1) (2026-10-03)
 
 ### :repeat: Continuous Integrations
