@@ -34,7 +34,7 @@
     "require-dev": {
         "ergebnis/composer-normalize": "^2.54.0",
         "koh/dev-typo3": "^1.0",
-        "php-mock/php-mock-phpunit": "^2.15.0",
+        "php-mock/php-mock-phpunit": "^2.16.0",
         "moselwal/keyvalue-store": "^4.5",
         "helhum/config-loader": "^0.12 || ^1.0",
         "mfc/oauth2": "^4.3.0"
