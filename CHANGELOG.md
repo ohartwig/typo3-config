@@ -1,3 +1,18 @@
+## [5.9.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.9.0...v5.9.1) (2026-10-03)
+
+### :repeat: Continuous Integrations
+
+* follow composed-default-pipelines on the rolling major tag ([438b8e8](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/438b8e81b73591f48235bdd0fd115eb6c9f0b471))
+* **deps:** update dependency devops/ci-cd-components/composed-default-pipelines to v2.21.18 ([8c2c213](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/8c2c2134184a07b0020d628f6d32b06678efa3d9))
+* **deps:** update dependency devops/ci-cd-components/composed-default-pipelines to v2.21.17 ([6b6dc8d](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/6b6dc8d8a80af073fe6222eb909b093428eb2bb5))
+* **deps:** update dependency devops/ci-cd-components/composed-default-pipelines to v2.21.11 ([4973c27](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/4973c27a5dfc457e2590d90fcbfa25c1b36cd087))
+* **deps:** update dependency devops/ci-cd-components/composed-default-pipelines to v2.21.10 ([f62d760](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/f62d760f304fa06bc48addd774c0ab499ea911cd))
+* **deps:** update dependency devops/ci-cd-components/composed-default-pipelines to v2.21.9 ([89aa629](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/89aa62998bb3f882de5ce4375f4b63896ac92018))
+
+### :repeat: Chores
+
+* **repo-templates:** sync ([962da15](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/962da155f9afa30ed62d16a857183f98d205b281))
+
 ## [5.9.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.8.12...v5.9.0) (2026-09-28)
 
 ### :sparkles: Features
