@@ -1,3 +1,9 @@
+## [5.9.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.9.2...v5.9.3) (2026-10-05)
+
+### :repeat: Chores
+
+* **repo-templates:** sync ([019a95b](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/019a95b7b04011fe6c712ab902d37e8df8788ed6))
+
 ## [5.9.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.9.1...v5.9.2) (2026-10-03)
 
 ### :repeat: Chores
