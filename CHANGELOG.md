@@ -1,3 +1,13 @@
+## [5.9.5](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.9.4...v5.9.5) (2026-10-26)
+
+### :bug: Fixes
+
+* **deps:** update dependency php to ^8.5.12 ([437e250](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/437e2508b7e5b5bb903db63456058920782fc310))
+
+### :repeat: Chores
+
+* **deps:** update dependency davidanson/markdownlint-cli2 to v0.24.0 ([33f8b1a](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/33f8b1a4c5a42c30ee8669161090948a6274749d))
+
 ## [5.9.4](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.9.3...v5.9.4) (2026-10-16)
 
 ### :repeat: Chores
