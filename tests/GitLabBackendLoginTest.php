@@ -85,18 +85,28 @@ class GitLabBackendLoginTest extends ConfigTestCase
             ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3-backend-access');
 
         self::assertSame('1', $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['oauth2']['enableBackendLogin']);
-        self::assertSame('0', $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['oauth2']['overrideUser']);
     }
 
     #[Test]
-    public function overrideUserIsOptIn(): void
+    public function rightsFollowGitLabOnEveryLoginByDefault(): void
     {
         $this->mockSecrets(['GITLAB_OAUTH_APP_ID' => 'app-id', 'GITLAB_OAUTH_APP_SECRET' => 'app-secret']);
 
         TestableConfig::initializeWithVersion(14)
-            ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3', overrideUser: true);
+            ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3-backend-access');
 
         self::assertSame('1', $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['oauth2']['overrideUser']);
+    }
+
+    #[Test]
+    public function overrideUserCanBeSwitchedOff(): void
+    {
+        $this->mockSecrets(['GITLAB_OAUTH_APP_ID' => 'app-id', 'GITLAB_OAUTH_APP_SECRET' => 'app-secret']);
+
+        TestableConfig::initializeWithVersion(14)
+            ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3', overrideUser: false);
+
+        self::assertSame('0', $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['oauth2']['overrideUser']);
     }
 
     #[Test]

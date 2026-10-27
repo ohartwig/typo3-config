@@ -9,6 +9,9 @@ muss nichts geaendert werden.
   oder E-Mail zugeordnet, sondern nur noch ueber `oauth_identifier`
   (`gitlab|<GitLab-User-ID>`). Bereits verknuepfte Konten funktionieren weiter.
 - Neue Konten heissen `gitlab-<GitLab-User-ID>` statt wie der GitLab-Benutzer.
+- `overrideUser` ist jetzt standardmaessig an: Admin-Flag und Gruppen folgen bei
+  jedem Login dem GitLab-Access-Level. Wer das alte Verhalten braucht, setzt
+  `overrideUser: false`.
 - Lokal angelegte Konten, die auch per GitLab erreichbar sein sollen, werden
   ueber `linkedAccounts: ['<benutzername>' => <GitLab-User-ID>]` verknuepft.
 - Nach dem Update: Konten mit gesetztem `oauth_identifier` pruefen, deren
