@@ -9,6 +9,8 @@ declare(strict_types=1);
 namespace Moselwal;
 
 use Mfc\OAuth2\ResourceServer\GitLab as UpstreamGitLabResourceServer;
+use Mfc\OAuth2\Services\OAuth2LoginService as UpstreamOAuth2LoginService;
+use Moselwal\OAuth2\GitLabLoginService;
 use Moselwal\OAuth2\GitLabResourceServer;
 use Mfc\OAuth2\ResourceServer\Registry as OAuth2ResourceServerRegistry;
 use Moselwal\KeyValueStore\Cache\Backend\KeyValueBackend;
@@ -1441,7 +1443,15 @@ class Config implements ConfigInterface
      * success for an access level above zero. From $adminUserLevel upwards the
      * user becomes a TYPO3 admin. For anything in between, put the GitLab
      * access level (10/20/30/40) into the "gitlabGroup" field of a be_groups
-     * record and the group is assigned on login.
+     * record and the group is assigned on login. With $overrideUser on both are
+     * re-applied on every login, so a demotion in GitLab reaches TYPO3 on the
+     * user's next login.
+     *
+     * Identity is the GitLab user id, nothing else. Upstream's auth service is
+     * replaced by Moselwal\OAuth2\GitLabLoginService, which never matches an
+     * existing account by username or e-mail: a GitLab login uses the account
+     * linked to its id, or an account listed for that id in $linkedAccounts,
+     * or creates "gitlab-<GitLab user id>". See GitLabLoginService.
      *
      * Password and passkey login are untouched — this adds a third way in, it
      * does not replace the other two.
@@ -1451,10 +1461,11 @@ class Config implements ConfigInterface
      * @param int $adminUserLevel GitLab access level from which the user becomes a TYPO3 admin (10 Guest, 20 Reporter, 30 Developer, 40 Maintainer)
      * @param string $defaultGroups Comma-separated be_groups UIDs used when no gitlabGroup mapping matches
      * @param bool $blockExternalUsers Refuse users carrying GitLab's "external" flag
-     * @param bool $overrideUser Re-apply admin/disable/starttime/endtime from GitLab on every login
+     * @param bool $overrideUser Re-apply admin, usergroup, e-mail and realName from GitLab on every login
      * @param string $label Text on the backend login screen
      * @param string|null $appId Fallback when GITLAB_OAUTH_APP_ID cannot be resolved
      * @param string|null $appSecret Fallback when GITLAB_OAUTH_APP_SECRET cannot be resolved
+     * @param array<string, int> $linkedAccounts Existing backend username => GitLab user id allowed to take it over on first login
      * @return $this
      */
     final public function useGitLabBackendLogin(
@@ -1467,8 +1478,13 @@ class Config implements ConfigInterface
         string $label = 'Login mit GitLab',
         ?string $appId = null,
         ?string $appSecret = null,
+        array $linkedAccounts = [],
     ): self {
-        if (!class_exists(OAuth2ResourceServerRegistry::class) || !class_exists(UpstreamGitLabResourceServer::class)) {
+        if (
+            !class_exists(OAuth2ResourceServerRegistry::class)
+            || !class_exists(UpstreamGitLabResourceServer::class)
+            || !class_exists(UpstreamOAuth2LoginService::class)
+        ) {
             return $this;
         }
 
@@ -1505,6 +1521,14 @@ class Config implements ConfigInterface
             'backendUserRealNameFormat' => '%name%',
         ]);
 
+        // Swap upstream's auth service for the one that links by GitLab user
+        // id only. TYPO3_CONF_VARS/T3_SERVICES is core's documented override
+        // for a registered service: addService() merges it over the
+        // registration in mfc/oauth2's ext_localconf.php, which runs after this
+        // file. Same service key, same priority — upstream's class never runs.
+        $GLOBALS['TYPO3_CONF_VARS']['T3_SERVICES']['auth'][UpstreamOAuth2LoginService::class]['className'] =
+            GitLabLoginService::class;
+
         OAuth2ResourceServerRegistry::addServer(
             'gitlab',
             $label,
@@ -1524,6 +1548,7 @@ class Config implements ConfigInterface
                     'gitlabUserOption' => 3,
                     'blockExternalUser' => $blockExternalUsers,
                     'projectName' => $projectName,
+                    'linkedAccounts' => $linkedAccounts,
                 ],
             ]
         );
