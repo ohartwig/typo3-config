@@ -1443,9 +1443,9 @@ class Config implements ConfigInterface
      * success for an access level above zero. From $adminUserLevel upwards the
      * user becomes a TYPO3 admin. For anything in between, put the GitLab
      * access level (10/20/30/40) into the "gitlabGroup" field of a be_groups
-     * record and the group is assigned on login. With $overrideUser on both are
-     * re-applied on every login, so a demotion in GitLab reaches TYPO3 on the
-     * user's next login.
+     * record and the group is assigned on login. With $overrideUser on (the
+     * default) both are re-applied on every login, so a demotion in GitLab
+     * reaches TYPO3 on the user's next login.
      *
      * Identity is the GitLab user id, nothing else. Upstream's auth service is
      * replaced by Moselwal\OAuth2\GitLabLoginService, which never matches an
@@ -1474,7 +1474,7 @@ class Config implements ConfigInterface
         int $adminUserLevel = 40,
         string $defaultGroups = '0',
         bool $blockExternalUsers = true,
-        bool $overrideUser = false,
+        bool $overrideUser = true,
         string $label = 'Login mit GitLab',
         ?string $appId = null,
         ?string $appSecret = null,

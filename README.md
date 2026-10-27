@@ -101,12 +101,12 @@ an. Traegt man dort ein GitLab-Access-Level ein (10 Guest, 20 Reporter, 30 Devel
 40 Maintainer), bekommt jeder Benutzer mit diesem Level die Gruppe beim Login zugewiesen.
 Greift kein Mapping, gilt `defaultGroups`.
 
-`overrideUser` (Default aus) schreibt bei **jedem** Login `admin`, `usergroup`,
+`overrideUser` (Default **an**) schreibt bei **jedem** Login `admin`, `usergroup`,
 `email` und `realName` aus GitLab zurueck. Eine Herabstufung in GitLab (z. B. Maintainer
 → Developer) nimmt dem Benutzer damit beim naechsten Login die Admin-Rechte; geaenderte
 `gitlabGroup`-Zuordnungen kommen ebenso an. In TYPO3 von Hand vergebene Gruppen an einem
 GitLab-verknuepften Konto gehen dabei verloren — die Rechte solcher Konten gehoeren nach
-GitLab. Ohne `overrideUser` gelten Admin-Flag und Gruppen nur beim Anlegen.
+GitLab. Mit `overrideUser: false` gelten Admin-Flag und Gruppen nur beim Anlegen.
 
 Sperren bleiben in TYPO3 wirksam: Ein deaktiviertes oder abgelaufenes Konto wird von
 einem GitLab-Login weder entsperrt noch durch ein neues Konto ersetzt — der Login wird
