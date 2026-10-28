@@ -1,3 +1,13 @@
+## [5.10.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.9.5...v5.10.0) (2026-10-28)
+
+### :sparkles: Features
+
+* **oauth2:** re-apply GitLab rights on every backend login by default ([3db74c9](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/3db74c9678abeafe574d774d1741df48abbe36df))
+
+### :bug: Fixes
+
+* **oauth2:** link GitLab backend logins by GitLab user id only ([df7768f](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/df7768fd82ba6656c55e3897df287c4e85d7d359))
+
 ## [5.9.5](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.9.4...v5.9.5) (2026-10-26)
 
 ### :bug: Fixes
