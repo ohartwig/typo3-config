@@ -6,6 +6,8 @@ namespace Moselwal\Tests;
 
 use Mfc\OAuth2\ResourceServer\GitLab;
 use Mfc\OAuth2\ResourceServer\Registry;
+use Mfc\OAuth2\Services\OAuth2LoginService;
+use Moselwal\OAuth2\GitLabLoginService;
 use phpmock\phpunit\PHPMock;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -83,18 +85,69 @@ class GitLabBackendLoginTest extends ConfigTestCase
             ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3-backend-access');
 
         self::assertSame('1', $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['oauth2']['enableBackendLogin']);
-        self::assertSame('0', $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['oauth2']['overrideUser']);
     }
 
     #[Test]
-    public function overrideUserIsOptIn(): void
+    public function rightsFollowGitLabOnEveryLoginByDefault(): void
     {
         $this->mockSecrets(['GITLAB_OAUTH_APP_ID' => 'app-id', 'GITLAB_OAUTH_APP_SECRET' => 'app-secret']);
 
         TestableConfig::initializeWithVersion(14)
-            ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3', overrideUser: true);
+            ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3-backend-access');
 
         self::assertSame('1', $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['oauth2']['overrideUser']);
+    }
+
+    #[Test]
+    public function overrideUserCanBeSwitchedOff(): void
+    {
+        $this->mockSecrets(['GITLAB_OAUTH_APP_ID' => 'app-id', 'GITLAB_OAUTH_APP_SECRET' => 'app-secret']);
+
+        TestableConfig::initializeWithVersion(14)
+            ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3', overrideUser: false);
+
+        self::assertSame('0', $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['oauth2']['overrideUser']);
+    }
+
+    #[Test]
+    public function replacesTheUpstreamAuthServiceUnderItsOwnServiceKey(): void
+    {
+        $this->mockSecrets(['GITLAB_OAUTH_APP_ID' => 'app-id', 'GITLAB_OAUTH_APP_SECRET' => 'app-secret']);
+
+        TestableConfig::initializeWithVersion(14)
+            ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3-backend-access');
+
+        self::assertSame(
+            GitLabLoginService::class,
+            $GLOBALS['TYPO3_CONF_VARS']['T3_SERVICES']['auth'][OAuth2LoginService::class]['className']
+        );
+    }
+
+    #[Test]
+    public function theOverrideMatchesTheServiceKeyUpstreamRegisters(): void
+    {
+        // The override only takes effect while mfc/oauth2 registers its
+        // service under this key. If an upgrade changes it, this must fail
+        // here rather than silently fall back to upstream's user lookup.
+        $localconf = (string)file_get_contents(
+            dirname((new \ReflectionClass(OAuth2LoginService::class))->getFileName(), 3) . '/ext_localconf.php'
+        );
+
+        self::assertMatchesRegularExpression(
+            "/addService\\(\\s*'oauth2',\\s*'auth',\\s*\\\\?Mfc\\\\OAuth2\\\\Services\\\\OAuth2LoginService::class,/",
+            $localconf
+        );
+    }
+
+    #[Test]
+    public function passesLinkedAccountsToTheResourceServer(): void
+    {
+        $this->mockSecrets(['GITLAB_OAUTH_APP_ID' => 'app-id', 'GITLAB_OAUTH_APP_SECRET' => 'app-secret']);
+
+        TestableConfig::initializeWithVersion(14)
+            ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3', linkedAccounts: ['operator' => 4711]);
+
+        self::assertSame(['operator' => 4711], $this->registeredOptions()['arguments']['linkedAccounts']);
     }
 
     #[Test]

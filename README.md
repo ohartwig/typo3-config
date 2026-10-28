@@ -101,10 +101,61 @@ an. Traegt man dort ein GitLab-Access-Level ein (10 Guest, 20 Reporter, 30 Devel
 40 Maintainer), bekommt jeder Benutzer mit diesem Level die Gruppe beim Login zugewiesen.
 Greift kein Mapping, gilt `defaultGroups`.
 
-`overrideUser` (Default aus) schreibt bei **jedem** Login `admin`, `disable`, `starttime`
-und `endtime` aus GitLab zurueck. Eingeschaltet heisst das: ein in TYPO3 gesperrter
-Redakteur wird durch einen GitLab-Login wieder entsperrt. Wer das einschaltet, muss
-Sperren konsequent in GitLab abbilden.
+`overrideUser` (Default **an**) schreibt bei **jedem** Login `admin`, `usergroup`,
+`email` und `realName` aus GitLab zurueck. Eine Herabstufung in GitLab (z. B. Maintainer
+→ Developer) nimmt dem Benutzer damit beim naechsten Login die Admin-Rechte; geaenderte
+`gitlabGroup`-Zuordnungen kommen ebenso an. In TYPO3 von Hand vergebene Gruppen an einem
+GitLab-verknuepften Konto gehen dabei verloren — die Rechte solcher Konten gehoeren nach
+GitLab. Mit `overrideUser: false` gelten Admin-Flag und Gruppen nur beim Anlegen.
+
+Sperren bleiben in TYPO3 wirksam: Ein deaktiviertes oder abgelaufenes Konto wird von
+einem GitLab-Login weder entsperrt noch durch ein neues Konto ersetzt — der Login wird
+abgelehnt.
+
+### Welches Konto ein GitLab-Login bekommt
+
+Massgeblich ist allein die **GitLab-User-ID** (unveraenderlich, von GitLab vergeben),
+gespeichert als `be_users.oauth_identifier` = `gitlab|<ID>`. Benutzername und E-Mail
+werden **nie** zum Zuordnen verwendet — beide waehlt der GitLab-Benutzer selbst.
+
+1. Ein aktives Konto mit diesem `oauth_identifier` → dieses Konto.
+2. Die ID ist nur mit einem gesperrten/abgelaufenen Konto verknuepft → Login abgelehnt.
+3. Die ID steht in `linkedAccounts` → das dort genannte, aktive und noch unverknuepfte
+   Konto wird verknuepft (Benutzername bleibt).
+4. Sonst → neues Konto **`gitlab-<ID>`**. Der Name kann mit keinem lokal angelegten Konto
+   kollidieren und vom GitLab-Benutzer nicht gesteuert werden; der Klarname steht in
+   `realName`.
+
+Dafuer ersetzt `useGitLabBackendLogin()` den Auth-Service von `mfc/oauth2` ueber
+`TYPO3_CONF_VARS/T3_SERVICES` durch `Moselwal\OAuth2\GitLabLoginService` (gleicher
+Service-Key, gleiche Prioritaet). Laeuft trotzdem einmal der Upstream-Service — etwa weil
+ein `mfc/oauth2`-Update den Service-Key aendert —, verweigert
+`Moselwal\OAuth2\GitLabResourceServer` den Login, statt auf die Namenssuche
+zurueckzufallen.
+
+**Lokal angelegte Konten** (z. B. das Betreiberkonto aus dem Admin-Bootstrap) sind per
+GitLab-Login nicht erreichbar, solange sie nicht ausdruecklich verknuepft sind. Wer ein
+solches Konto auch per GitLab nutzen will, traegt es mit der GitLab-User-ID ein:
+
+```php
+->useGitLabBackendLogin(
+    gitlabServer: 'https://git.example.com',
+    projectName: 'devops/typo3-backend-access',
+    linkedAccounts: ['operator' => 4711],   // TYPO3-Benutzername => GitLab-User-ID
+);
+```
+
+Die ID steht im GitLab-Profil (bzw. `GET /api/v4/users?username=<name>`). Alternativ
+einmalig per SQL: `UPDATE be_users SET oauth_identifier = 'gitlab|<ID>' WHERE username = '<name>'`.
+Ohne Verknuepfung bekommt der Betreiber beim GitLab-Login einfach ein eigenes Konto
+`gitlab-<ID>` (Admin ab `adminUserLevel`); das lokale Konto bleibt als Passwort-Zugang
+daneben bestehen.
+
+**Bestehende Verknuepfungen** (Konten mit gesetztem `oauth_identifier`) funktionieren
+unveraendert weiter und behalten ihren Benutzernamen. Vor dieser Version konnte ein
+Konto allerdings auch ueber Benutzername oder E-Mail verknuepft worden sein. Nach dem
+Update lohnt ein Blick auf alle Konten mit `oauth_identifier <> ''`, deren Verknuepfung
+nicht vom GitLab-Login selbst angelegt wurde; im Zweifel `oauth_identifier` leeren.
 
 ### Redirect-URI
 
@@ -135,6 +186,8 @@ Fehler behebt, kann die Klasse weg.
   der RequestToken-Check schlaegt jedes Mal fehl.
 - `EXTENSIONS/oauth2` wird gesetzt, damit `mfc/oauth2` den Login-Provider registriert.
   Das spart den Klick im Install-Tool und haelt die Konfiguration im Code.
+- `T3_SERVICES/auth/Mfc\OAuth2\Services\OAuth2LoginService/className` zeigt auf
+  `Moselwal\OAuth2\GitLabLoginService` (siehe oben).
 
 Passwort- und Passkey-Login bleiben unveraendert. GitLab kommt als dritter Weg dazu und
 ersetzt die anderen beiden nicht — faellt die GitLab-Instanz aus, kommt man weiterhin
