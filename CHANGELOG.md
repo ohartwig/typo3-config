@@ -1,3 +1,9 @@
+## [5.10.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.10.0...v5.10.1) (2026-10-30)
+
+### :repeat: Chores
+
+* **deps:** update dependency mfc/oauth2 to ^4.4.0 ([637f830](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/637f830271d5870078992cd94dcc2e653dac7bf8))
+
 ## [5.10.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.9.5...v5.10.0) (2026-10-28)
 
 ### :sparkles: Features
