@@ -373,7 +373,7 @@ class Config implements ConfigInterface
      * TYPO3__EXTENSIONS__* variables) wrote the cache first and the app
      * container, which carries them, silently reused it -- the frankenphp
      * purge kept calling caddy-proxy.internal:2019 although its env said
-     * caddy-proxy:443. Measured on kunde-xebro: cache file 187 bytes, written
+     * caddy-proxy:443. Measured on kunde-tenant-b: cache file 187 bytes, written
      * 18 s before the app container started.
      *
      * The fingerprint over every TYPO3__* variable (name and value, sorted)
