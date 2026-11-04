@@ -1,3 +1,18 @@
+## [5.10.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.10.1...v5.10.2) (2026-11-04)
+
+### :bug: Fixes
+
+* **security:** AUD-053 F01 — replace customer identifiers with placeholders ([009466f](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/009466fa733edc071fd1387e77140d67c835a662))
+
+### :white_check_mark: Tests
+
+* **security:** AUD-053 F01 — fix the hygiene test namespace (PSR-4) ([2479b1f](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/2479b1f8ab932c11d416e06b369d9863946ec2d0))
+* **security:** AUD-053 F01 — add the customer-name hygiene test ([511a859](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/511a85978d00420af4dbbef8a8ba42e4e2dc6d3f))
+
+### :repeat: Chores
+
+* **deps:** update dependency ergebnis/composer-normalize to ^2.56.0 ([e821f08](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/e821f08536e645b790efad6a61778507ddda7757))
+
 ## [5.10.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.10.0...v5.10.1) (2026-10-30)
 
 ### :repeat: Chores
