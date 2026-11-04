@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Moselwal\Tests;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Response;
 use League\OAuth2\Client\Provider\AbstractProvider;
+use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
 use Mfc\OAuth2\ResourceServer\GitLab;
 use Mfc\OAuth2\ResourceServer\Registry;
@@ -12,6 +17,7 @@ use Mfc\OAuth2\Services\OAuth2LoginService;
 use Moselwal\OAuth2\GitLabLoginService;
 use Moselwal\OAuth2\GitLabResourceServer;
 use Moselwal\Tests\Fixtures\SqliteConnection;
+use Omines\OAuth2\Client\Provider\Gitlab as GitLabOAuthProvider;
 use Omines\OAuth2\Client\Provider\GitlabResourceOwner;
 use phpmock\phpunit\PHPMock;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -221,6 +227,48 @@ class GitLabLoginServiceTest extends ConfigTestCase
     }
 
     #[Test]
+    public function anAccessGroupLoginMapsRightsFromUserinfoAndFollowsADemotion(): void
+    {
+        // AUD-038-F03: the same rights model without read_api. The level comes
+        // from OpenID Connect userinfo; nothing else is asked of GitLab.
+        $this->insertGroup(['uid' => 3, 'title' => 'Developers', 'gitlabGroup' => '30']);
+        $user = $this->gitlabUser(55, 'maintainer', 'm@example.test');
+
+        $first = $this->loginWithUserinfo($this->loginService(accessGroup: 'sites/site-access'), $user, [
+            'sub' => '55',
+            'https://gitlab.org/claims/groups/maintainer' => ['sites'],
+        ]);
+        self::assertNotNull($first);
+        self::assertSame('gitlab-55', $first['username']);
+        self::assertSame(1, (int)$first['admin']);
+
+        $this->resetRegistry();
+        $service = $this->loginService(accessGroup: 'sites/site-access');
+        $second = $this->loginWithUserinfo($service, $user, [
+            'sub' => '55',
+            'groups' => ['sites', 'sites/site-access'],
+            'https://gitlab.org/claims/groups/developer' => ['sites/site-access'],
+        ]);
+        self::assertNotNull($second);
+        self::assertSame((int)$first['uid'], (int)$second['uid']);
+        self::assertSame(0, (int)$second['admin']);
+        self::assertSame('3', (string)$second['usergroup']);
+        self::assertSame(200, $service->authUser($second));
+    }
+
+    #[Test]
+    public function anAccessGroupLoginWithoutMembershipGetsNoSession(): void
+    {
+        $user = $this->gitlabUser(56, 'outsider', 'o@example.test');
+        $service = $this->loginService(accessGroup: 'sites/site-access');
+
+        $record = $this->loginWithUserinfo($service, $user, ['sub' => '56', 'groups' => ['elsewhere']]);
+
+        self::assertNotNull($record);
+        self::assertSame(100, $service->authUser($record));
+    }
+
+    #[Test]
     public function upstreamsServiceCannotAuthenticateAgainstThisResourceServer(): void
     {
         // Should the service override ever be lost, the login must fail
@@ -251,7 +299,7 @@ class GitLabLoginServiceTest extends ConfigTestCase
     /**
      * @param array<string, int> $linkedAccounts
      */
-    private function loginService(array $linkedAccounts = []): GitLabLoginService
+    private function loginService(array $linkedAccounts = [], string $accessGroup = ''): GitLabLoginService
     {
         $extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
         $extensionConfiguration->method('get')->willReturn(['overrideUser' => '1', 'backendUserRealNameFormat' => '%name%']);
@@ -267,7 +315,7 @@ class GitLabLoginServiceTest extends ConfigTestCase
             ],
         ], null);
 
-        $this->registerResourceServer($linkedAccounts);
+        $this->registerResourceServer($linkedAccounts, $accessGroup);
 
         return $service;
     }
@@ -288,7 +336,7 @@ class GitLabLoginServiceTest extends ConfigTestCase
     /**
      * @param array<string, int> $linkedAccounts
      */
-    private function registerResourceServer(array $linkedAccounts): void
+    private function registerResourceServer(array $linkedAccounts, string $accessGroup = ''): void
     {
         Registry::addServer('gitlab', 'GitLab', GitLabResourceServer::class, [
             'enabled' => true,
@@ -300,10 +348,47 @@ class GitLabLoginServiceTest extends ConfigTestCase
                 'gitlabDefaultGroups' => '0',
                 'gitlabUserOption' => 3,
                 'blockExternalUser' => true,
-                'projectName' => 'group/project',
+                'projectName' => $accessGroup === '' ? 'group/project' : '',
                 'linkedAccounts' => $linkedAccounts,
+                'accessGroup' => $accessGroup,
             ],
         ]);
+    }
+
+    /**
+     * A login in the access-group model: the resource owner is handed back
+     * directly, and every userinfo request is answered with $claims.
+     *
+     * @param array<string, mixed> $claims
+     * @return array<string, mixed>|null
+     */
+    private function loginWithUserinfo(GitLabLoginService $service, GitlabResourceOwner $user, array $claims): ?array
+    {
+        (fn() => $this->initializeResourceServer($GLOBALS['TYPO3_REQUEST']))->call($service);
+
+        $body = json_encode($claims, JSON_THROW_ON_ERROR);
+        $responses = array_fill(0, 5, new Response(200, ['Content-Type' => 'application/json'], $body));
+        $provider = new class ($user, $responses) extends GitLabOAuthProvider {
+            /**
+             * @param list<Response> $responses
+             */
+            public function __construct(private readonly GitlabResourceOwner $owner, array $responses)
+            {
+                parent::__construct(
+                    ['clientId' => 'app-id', 'clientSecret' => 'app-secret', 'redirectUri' => 'https://cms.example.test/login', 'domain' => 'https://git.example.test'],
+                    ['httpClient' => new Client(['handler' => HandlerStack::create(new MockHandler($responses))])]
+                );
+            }
+
+            public function getResourceOwner(AccessToken $token): ResourceOwnerInterface
+            {
+                return $this->owner;
+            }
+        };
+        (new \ReflectionProperty(GitLab::class, 'oauthProvider'))->setValue(Registry::getResourceServerInstance('gitlab'), $provider);
+        $this->setAccessToken($service);
+
+        return (fn() => $this->findOrCreateUserByResourceOwner($user))->call($service);
     }
 
     /**

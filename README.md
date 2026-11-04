@@ -71,7 +71,8 @@ Config::initialize()
     ->loadCoreSecrets()
     ->useGitLabBackendLogin(
         gitlabServer: 'https://git.example.com',
-        projectName: 'devops/typo3-backend-access',
+        projectName: '',
+        accessGroup: 'devops/typo3-backend-access',   // empfohlen, siehe "Zugriffsgruppe statt Projekt"
         adminUserLevel: 40,   // ab Maintainer wird der Benutzer TYPO3-Admin
     );
 ```
@@ -87,7 +88,8 @@ kein GitLab steht — er schaltet sich selbst frei, sobald die Secrets vorhanden
 
 ### Wer darf rein
 
-Die Berechtigung haengt an **einem** GitLab-Projekt (`projectName`):
+Die Berechtigung haengt an **einem** GitLab-Projekt (`projectName`) oder an **einer**
+GitLab-Gruppe (`accessGroup`):
 
 | GitLab | TYPO3 |
 |---|---|
@@ -95,6 +97,9 @@ Die Berechtigung haengt an **einem** GitLab-Projekt (`projectName`):
 | Access Level > 0 | Login erlaubt |
 | Access Level ≥ `adminUserLevel` | TYPO3-Admin |
 | `external`-Flag | abgelehnt, solange `blockExternalUsers` gesetzt ist |
+
+Mit `accessGroup` gilt dieselbe Tabelle fuer die Mitgliedschaft in dieser Gruppe (siehe
+unten).
 
 Feinere Zuordnung laeuft ueber `be_groups`: Die Extension legt dort das Feld `gitlabGroup`
 an. Traegt man dort ein GitLab-Access-Level ein (10 Guest, 20 Reporter, 30 Developer,
@@ -107,6 +112,36 @@ Greift kein Mapping, gilt `defaultGroups`.
 `gitlabGroup`-Zuordnungen kommen ebenso an. In TYPO3 von Hand vergebene Gruppen an einem
 GitLab-verknuepften Konto gehen dabei verloren — die Rechte solcher Konten gehoeren nach
 GitLab. Mit `overrideUser: false` gelten Admin-Flag und Gruppen nur beim Anlegen.
+
+### Zugriffsgruppe statt Projekt (`accessGroup`, empfohlen)
+
+Im Projekt-Modell (nur `projectName`) liest die Extension das Access-Level ueber die
+GitLab-API mit dem Token des Benutzers. Dafuer fordert der Login den Scope **`read_api`**
+an — jeder Login gibt dem TYPO3-Prozess damit einen Token, der die **gesamte** GitLab-API
+im Namen des Benutzers lesen kann: alle Repositories und bei Projekten, die er maintained,
+auch die CI/CD-Variablen. Wer Code im TYPO3-Prozess ausfuehren kann, liest beim naechsten
+Login eines Maintainers die Instanz mit.
+
+Mit `accessGroup` kommt das Level stattdessen aus der OpenID-Connect-Antwort von GitLab
+(`/oauth/userinfo`), und der Login fordert nur **`read_user openid`** an:
+
+| userinfo-Claim (Gruppe oder eine Elterngruppe) | Level |
+|---|---|
+| `https://gitlab.org/claims/groups/owner` | 50 |
+| `https://gitlab.org/claims/groups/maintainer` | 40 |
+| `https://gitlab.org/claims/groups/developer` | 30 |
+| sonst Mitglied laut `groups` | 10 |
+| nichts davon, Antwort fuer einen anderen Benutzer, GitLab nicht erreichbar | 0 → abgelehnt |
+
+Grenzen dieses Modells: userinfo unterscheidet Guest und Reporter nicht (beide 10, ein
+`gitlabGroup`-Mapping auf 20 greift nie), und Mitgliedschaften in einem **Projekt** oder
+ueber eine geteilte Gruppe zaehlen nicht. Fuer jede Installation also eine eigene Gruppe
+anlegen (z. B. `devops/<site>-backend-access`) und die Berechtigten dort eintragen.
+Ist `accessGroup` gesetzt, wird `projectName` ignoriert.
+
+Die GitLab-Application danach auf die Scopes **`read_user` und `openid`** beschraenken.
+GitLab stellt zwar nur die angeforderten Scopes aus, aber eine Application, die mehr
+erlaubt, erlaubt es auch jedem anderen Client mit ihren Zugangsdaten.
 
 Sperren bleiben in TYPO3 wirksam: Ein deaktiviertes oder abgelaufenes Konto wird von
 einem GitLab-Login weder entsperrt noch durch ein neues Konto ersetzt — der Login wird
