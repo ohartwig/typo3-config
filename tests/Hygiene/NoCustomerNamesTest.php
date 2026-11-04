@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MoselwalTests\Hygiene;
+namespace Moselwal\Tests\Hygiene;
 
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
