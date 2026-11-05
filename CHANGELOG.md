@@ -1,3 +1,13 @@
+## [5.11.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.10.3...v5.11.1) (2026-11-05)
+
+### :sparkles: Features
+
+* **oauth2:** decide GitLab backend access from a group, without read_api ([4c00e79](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/4c00e79ce7cc2819fc29c02d35edc5571ced4b96))
+
+### :repeat: Chores
+
+* **repo-templates:** sync ([eceb40c](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/eceb40ce18d55d43d72840a7a658fc8ceca2735d))
+
 ## [5.11.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.10.3...v5.11.0) (2026-11-05)
 
 ### :sparkles: Features
