@@ -1,3 +1,9 @@
+## [5.10.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.10.2...v5.10.3) (2026-11-05)
+
+### :bug: Fixes
+
+* **test:** make test:infection start under PHPUnit 13 ([ed103a0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/ed103a085edaa8c26ef9217fabc4c1a10bc49188))
+
 ## [5.10.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.10.1...v5.10.2) (2026-11-04)
 
 ### :bug: Fixes
