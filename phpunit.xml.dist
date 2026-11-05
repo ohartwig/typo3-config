@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    executionOrder is "depends,random", not "depends,defects", and that is not
+    executionOrder is "random" (PHPUnit 13 rejects "depends,random"), not "defects", and that is not
     a preference.
 
     Infection rewrites this file into a temporary copy of its own and forces
@@ -22,7 +22,7 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
-         executionOrder="depends,random"
+         executionOrder="random"
          resolveDependencies="true"
          failOnRisky="true"
          failOnWarning="true"
