@@ -1438,10 +1438,11 @@ class Config implements ConfigInterface
      * call unconditionally from any additional.php, including instances that
      * have no GitLab behind them.
      *
-     * Authorization hangs off ONE GitLab project. Anyone who is not a member
-     * of it cannot reach the backend, because the auth service only returns
-     * success for an access level above zero. From $adminUserLevel upwards the
-     * user becomes a TYPO3 admin. For anything in between, put the GitLab
+     * Authorization hangs off ONE GitLab project, or with $accessGroup ONE
+     * GitLab group. Anyone who is not a member of it cannot reach the backend,
+     * because the auth service only returns success for an access level above
+     * zero. From $adminUserLevel upwards the user becomes a TYPO3 admin. For
+     * anything in between, put the GitLab
      * access level (10/20/30/40) into the "gitlabGroup" field of a be_groups
      * record and the group is assigned on login. With $overrideUser on (the
      * default) both are re-applied on every login, so a demotion in GitLab
@@ -1452,6 +1453,16 @@ class Config implements ConfigInterface
      * existing account by username or e-mail: a GitLab login uses the account
      * linked to its id, or an account listed for that id in $linkedAccounts,
      * or creates "gitlab-<GitLab user id>". See GitLabLoginService.
+     *
+     * Which token the installation holds depends on that choice. The project
+     * model reads the project's member API with the user's token and therefore
+     * asks GitLab for read_api: every login hands this process a token that
+     * reads the whole GitLab API as that user. With $accessGroup the level
+     * comes from GitLab's OpenID Connect userinfo instead and the login asks
+     * for "read_user openid" only (Owner 50, Maintainer 40, Developer 30 of the
+     * group or an ancestor; any other membership 10). Prefer $accessGroup, and
+     * restrict the GitLab OAuth application to the scopes it requests. When
+     * $accessGroup is set, $projectName is not used.
      *
      * Password and passkey login are untouched — this adds a third way in, it
      * does not replace the other two.
@@ -1466,6 +1477,7 @@ class Config implements ConfigInterface
      * @param string|null $appId Fallback when GITLAB_OAUTH_APP_ID cannot be resolved
      * @param string|null $appSecret Fallback when GITLAB_OAUTH_APP_SECRET cannot be resolved
      * @param array<string, int> $linkedAccounts Existing backend username => GitLab user id allowed to take it over on first login
+     * @param string $accessGroup Full path of the GitLab group whose membership governs backend access; replaces $projectName and drops the read_api scope
      * @return $this
      */
     final public function useGitLabBackendLogin(
@@ -1479,6 +1491,7 @@ class Config implements ConfigInterface
         ?string $appId = null,
         ?string $appSecret = null,
         array $linkedAccounts = [],
+        string $accessGroup = '',
     ): self {
         if (
             !class_exists(OAuth2ResourceServerRegistry::class)
@@ -1499,7 +1512,11 @@ class Config implements ConfigInterface
         }
 
         $gitlabServer = rtrim(trim($gitlabServer), '/');
-        if ($gitlabServer === '' || $projectName === '') {
+        $accessGroup = trim($accessGroup, " \t\n\r\0\x0B/");
+        if ($accessGroup !== '') {
+            $projectName = '';
+        }
+        if ($gitlabServer === '' || ($projectName === '' && $accessGroup === '')) {
             return $this;
         }
 
@@ -1549,6 +1566,7 @@ class Config implements ConfigInterface
                     'blockExternalUser' => $blockExternalUsers,
                     'projectName' => $projectName,
                     'linkedAccounts' => $linkedAccounts,
+                    'accessGroup' => $accessGroup,
                 ],
             ]
         );

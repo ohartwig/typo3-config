@@ -151,6 +151,44 @@ class GitLabBackendLoginTest extends ConfigTestCase
     }
 
     #[Test]
+    public function anAccessGroupReplacesTheProject(): void
+    {
+        $this->mockSecrets(['GITLAB_OAUTH_APP_ID' => 'app-id', 'GITLAB_OAUTH_APP_SECRET' => 'app-secret']);
+
+        TestableConfig::initializeWithVersion(14)
+            ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3', accessGroup: '/devops/typo3-access/');
+
+        $arguments = $this->registeredOptions()['arguments'];
+        self::assertSame('devops/typo3-access', $arguments['accessGroup']);
+        // The project model, and with it read_api, is off.
+        self::assertSame('', $arguments['projectName']);
+    }
+
+    #[Test]
+    public function anAccessGroupIsEnoughWithoutAProject(): void
+    {
+        $this->mockSecrets(['GITLAB_OAUTH_APP_ID' => 'app-id', 'GITLAB_OAUTH_APP_SECRET' => 'app-secret']);
+
+        TestableConfig::initializeWithVersion(14)
+            ->useGitLabBackendLogin('https://git.example.com', '', accessGroup: 'devops/typo3-access');
+
+        self::assertSame('devops/typo3-access', $this->registeredOptions()['arguments']['accessGroup']);
+    }
+
+    #[Test]
+    public function withoutAnAccessGroupTheProjectModelStays(): void
+    {
+        $this->mockSecrets(['GITLAB_OAUTH_APP_ID' => 'app-id', 'GITLAB_OAUTH_APP_SECRET' => 'app-secret']);
+
+        TestableConfig::initializeWithVersion(14)
+            ->useGitLabBackendLogin('https://git.example.com', 'devops/typo3');
+
+        $arguments = $this->registeredOptions()['arguments'];
+        self::assertSame('', $arguments['accessGroup']);
+        self::assertSame('devops/typo3', $arguments['projectName']);
+    }
+
+    #[Test]
     public function relaxesCookieSameSiteBecauseTheCallbackIsCrossSite(): void
     {
         $this->mockSecrets(['GITLAB_OAUTH_APP_ID' => 'app-id', 'GITLAB_OAUTH_APP_SECRET' => 'app-secret']);

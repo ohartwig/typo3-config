@@ -1,5 +1,23 @@
 # Upgrade Guide
 
+## GitLab-Backend-Login ohne `read_api`: `accessGroup` (5.x)
+
+Betrifft nur Installationen, die `useGitLabBackendLogin()` aufrufen. Ohne Aenderung am
+Aufruf bleibt alles wie bisher — einschliesslich des Scopes `read_api`, mit dem jeder
+Login dem TYPO3-Prozess einen Lesetoken fuer die gesamte GitLab-API gibt.
+
+Umstellen:
+
+1. In GitLab eine Gruppe fuer den Backend-Zugang der Installation anlegen und die
+   Berechtigten mit der passenden Rolle eintragen (Maintainer → Admin bei
+   `adminUserLevel: 40`; Developer → Level 30; Guest/Reporter → Level 10).
+2. Im Aufruf `accessGroup: '<gruppenpfad>'` setzen (`projectName` wird dann ignoriert).
+3. Die GitLab-Application auf die Scopes `read_user` und `openid` beschraenken.
+
+`be_groups.gitlabGroup`-Mappings auf 20 (Reporter) greifen im Gruppenmodell nicht mehr,
+weil GitLabs userinfo Guest und Reporter nicht unterscheidet. Details im README,
+Abschnitt "Zugriffsgruppe statt Projekt".
+
 ## GitLab-Backend-Login: Zuordnung nur noch per GitLab-User-ID (5.x)
 
 Betrifft nur Installationen, die `useGitLabBackendLogin()` aufrufen. Am Aufruf
