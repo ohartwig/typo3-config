@@ -1,3 +1,18 @@
+## [5.11.5](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.10.3...v5.11.5) (2026-11-06)
+
+### :sparkles: Features
+
+* **oauth2:** decide GitLab backend access from a group, without read_api ([4c00e79](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/4c00e79ce7cc2819fc29c02d35edc5571ced4b96))
+
+### :repeat: Chores
+
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.142-8.5 ([23e8c26](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/23e8c26f931afcce439bce2c079c74620b0a30c3))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.139-8.5 ([935eca9](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/935eca9445f8fb52a75e57bab43fef1828b39142))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.138-8.5 ([978a1b3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/978a1b310d765394a572764069277f66ab1228dd))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.137-8.5 ([dc6adcc](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/dc6adcc421954d79f753aadec34e757a59b58941))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.136-8.5 ([3f14cd3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/3f14cd346696b2fc6c6b71534b35460b1348a8cf))
+* **repo-templates:** sync ([eceb40c](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/eceb40ce18d55d43d72840a7a658fc8ceca2735d))
+
 ## [5.11.4](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.10.3...v5.11.4) (2026-11-06)
 
 ### :sparkles: Features
