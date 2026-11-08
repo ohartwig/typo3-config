@@ -1047,6 +1047,16 @@ class Config implements ConfigInterface
      *                                  environment name (`prod` |
      *                                  `staging` | `testing` |
      *                                  `development`).
+     *  - `CLUSTER_CACHE_METADATA_MEMO` — `1`/`true`/`on` switches on the
+     *                                  backend's `crossRequestMetadataMemo`:
+     *                                  a FrankenPHP worker keeps metadata
+     *                                  across requests and reads one
+     *                                  generation key per request instead
+     *                                  of every entry. Only safe once every
+     *                                  pod, worker and cron job runs a
+     *                                  cluster-file-backend version that
+     *                                  maintains the generation; ignored by
+     *                                  versions that lack the option.
      *
      * @param array<int, string> $excludeCaches Caches to keep on their
      *     current backend even if file-backed. Defaults are the caches
@@ -1063,7 +1073,7 @@ class Config implements ConfigInterface
      */
     public function useClusterFileBackend(array $excludeCaches = ['core', 'assets', 'database_schema']): self
     {
-        if (!class_exists(ClusterFileBackend::class)) {
+        if (!$this->clusterFileBackendInstalled()) {
             return $this;
         }
 
@@ -1124,6 +1134,13 @@ class Config implements ConfigInterface
 
         $metadataCacheIdentifier = 'cluster_meta';
 
+        // Only forwarded to a backend that knows the option: older versions
+        // validate their options and would reject an unknown key.
+        $metadataMemoEnv = getenv('CLUSTER_CACHE_METADATA_MEMO');
+        $metadataMemo = is_string($metadataMemoEnv)
+            && in_array(strtolower(trim($metadataMemoEnv)), ['1', 'true', 'on', 'yes'], true)
+            && $this->clusterFileBackendSupportsMetadataMemo();
+
         // Zero-dependency fallback for `cluster_meta`. autoconfigureCaching()
         // already registers it on KeyValueBackend when Redis is available
         // (see the `cluster_meta` block there); we only fill the gap when
@@ -1158,6 +1175,9 @@ class Config implements ConfigInterface
             // For 0/missing values we let the backend pick its own default
             // (3600s as of v1.0.x), which is the safest cluster-default and
             // matches what `SimpleFileBackend` consumers had in practice.
+            if ($metadataMemo) {
+                $options['crossRequestMetadataMemo'] = true;
+            }
             $existingLifetime = isset($existing['options']['defaultLifetime'])
                 ? (int)$existing['options']['defaultLifetime']
                 : 0;
@@ -1168,13 +1188,42 @@ class Config implements ConfigInterface
             $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'][$cacheName] = array_replace(
                 $existing,
                 [
-                    'backend' => ClusterFileBackend::class,
+                    'backend' => self::clusterFileBackendClass(),
                     'options' => $options,
                 ],
             );
         }
 
         return $this;
+    }
+
+    /**
+     * Whether moselwal/cluster-file-backend is installed.
+     */
+    protected function clusterFileBackendInstalled(): bool
+    {
+        return class_exists(self::clusterFileBackendClass());
+    }
+
+    /**
+     * Whether the installed cluster-file-backend knows the
+     * `crossRequestMetadataMemo` option (2.7.0 and later). Older versions
+     * validate their options and reject unknown keys.
+     */
+    protected function clusterFileBackendSupportsMetadataMemo(): bool
+    {
+        // false as well when the package is not installed at all
+        return method_exists(self::clusterFileBackendClass(), 'isCrossRequestMetadataMemoEnabled');
+    }
+
+    /**
+     * The backend class as a plain string: the package is optional, and its
+     * installed version decides which methods exist, so neither may be
+     * resolved statically.
+     */
+    private static function clusterFileBackendClass(): string
+    {
+        return 'Moselwal\\Typo3ClusterCache\\Infrastructure\\Cache\\Backend\\ClusterFileBackend';
     }
 
     /**
