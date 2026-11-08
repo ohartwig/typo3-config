@@ -1,3 +1,23 @@
+## [5.12.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.11.6...v5.12.1) (2026-11-08)
+
+### :sparkles: Features
+
+* **cache:** switch on the cluster cache metadata memo by environment ([ad40877](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/ad4087725fc9756b617a318544b455f33f45dcbc))
+
+### :bug: Fixes
+
+* **security:** keep customer namespaces out of the public mirror ([754f26b](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/754f26bce72b2a31eb43c1d3cb9f740327f87713))
+
+### :repeat: Chores
+
+* **repo-templates:** sync ([95f19af](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/95f19af2e6ea9eb480f016cac09b376bcf73b2b0))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.150-8.5 ([354e7a3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/354e7a38ea589eea8be3395f9576a4a6598f9944))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.149-8.5 ([f9d9c2b](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/f9d9c2b5050f1345dbecd60f23e11ccd4a56e6c9))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.148-8.5 ([959e8ee](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/959e8eea40f44894d1a0e01c338ac1a2f6466911))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.147-8.5 ([dbb8a29](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/dbb8a29842b087b5ea1610c955db31a7c35a49cc))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.146-8.5 ([999d111](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/999d11193f517356dfa901699746d11aefc594ee))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.144-8.5 ([a0e543a](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/a0e543af15f163fc6fb9439b20e3a00390a524d1))
+
 ## [5.12.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.11.6...v5.12.0) (2026-11-08)
 
 ### :sparkles: Features
