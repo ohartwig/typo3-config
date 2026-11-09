@@ -16,32 +16,16 @@ use PHPUnit\Framework\Attributes\Test;
 class FrontendHardeningTest extends ConfigTestCase
 {
     #[Test]
-    public function dieCacheLifetimeStehtStandardmaessigAufEinerStunde(): void
+    public function useShorterCacheLifetimeAendertNichts(): void
     {
-        // TYPO3s eigener Vorgabewert sind 24 Stunden. Ein einmal vergifteter
-        // Cache-Eintrag haelt sich damit einen Tag lang (F-15).
-        (new Config())->useShorterCacheLifetime();
+        // Die Methode setzte frueher FE.cacheTimeout, eine Option, die TYPO3
+        // nicht kennt. Sie ist jetzt ausdruecklich wirkungslos und schreibt
+        // auch keinen erfundenen Schluessel mehr.
+        $before = $GLOBALS['TYPO3_CONF_VARS']['FE'] ?? [];
 
-        self::assertSame(3600, $GLOBALS['TYPO3_CONF_VARS']['FE']['cacheTimeout']);
-    }
-
-    #[Test]
-    public function unterEinerMinuteWirdNichtGegangen(): void
-    {
-        // max(60, ...) ist kein Schoenheitsfehler: eine Lifetime von 0 oder 1
-        // Sekunde schaltet den Seiten-Cache praktisch ab, und das faellt erst
-        // unter Last auf.
-        (new Config())->useShorterCacheLifetime(5);
-
-        self::assertSame(60, $GLOBALS['TYPO3_CONF_VARS']['FE']['cacheTimeout']);
-    }
-
-    #[Test]
-    public function derVorgabewertLaesstSichNachObenSetzen(): void
-    {
         (new Config())->useShorterCacheLifetime(7200);
 
-        self::assertSame(7200, $GLOBALS['TYPO3_CONF_VARS']['FE']['cacheTimeout']);
+        self::assertSame($before, $GLOBALS['TYPO3_CONF_VARS']['FE'] ?? []);
     }
 
     #[Test]

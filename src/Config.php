@@ -674,16 +674,21 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Setzt die Default-Cache-Lifetime fuer FE-Pages auf einen vernuenftigen
-     * Wert (Default 1h statt TYPO3-Default 24h). Verhindert dass ein einmal
-     * gepoisoneter Cache-Eintrag jahrelang persistiert. Kann von einzelnen
-     * Pages via TypoScript `config.cache_period` ueberschrieben werden.
+     * Tut nichts und faellt im naechsten Major weg.
      *
-     * Mitigation fuer Pentest 2026-05-20 F-15.
+     * Gedacht als Mitigation fuer Pentest 2026-05-20 F-15 (ein vergifteter
+     * Cache-Eintrag soll nicht lange leben). Die Methode setzte
+     * FE.cacheTimeout, eine Option, die TYPO3 nicht kennt: Seiten behielten
+     * die ganze Zeit TYPO3s eigene Lebensdauer. Die Lebensdauer bleibt nach
+     * Entscheidung des Owners (2026-11-09) bei TYPO3s Vorgabe; was einen
+     * vergifteten Eintrag tatsaechlich begrenzt, sind cHash-Erzwingung, das
+     * nur intern erreichbare Edge-Purge und das Leeren bei jedem Deploy.
+     * Aufrufe koennen entfallen.
+     *
+     * @deprecated since 5.x, no effect; remove the call
      */
     final public function useShorterCacheLifetime(int $seconds = 3600): self
     {
-        $GLOBALS['TYPO3_CONF_VARS']['FE']['cacheTimeout'] = max(60, $seconds);
         return $this;
     }
 
