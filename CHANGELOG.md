@@ -1,3 +1,15 @@
+## [5.12.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.12.1...v5.12.2) (2026-11-09)
+
+### :bug: Fixes
+
+* **config:** make useShorterCacheLifetime an explicit no-op, deprecated ([5da699b](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/5da699b963be5a2843313b1d6555569632902557))
+
+### :repeat: Chores
+
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.173-8.5 ([c95ac01](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/c95ac01925917987af9f3b81b5b0cd80706a6eeb))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.172-8.5 ([301125a](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/301125a2794a44293acbad87f33b98f97726e226))
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.171-8.5 ([44f9c9c](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/44f9c9c8427ed4a942b9c86fafcaea92adac285b))
+
 ## [5.12.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.11.6...v5.12.1) (2026-11-08)
 
 ### :sparkles: Features
