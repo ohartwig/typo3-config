@@ -934,6 +934,21 @@ class Config implements ConfigInterface
                 $redisCaches['cluster_meta'] = ['defaultLifetime' => 0];
             }
 
+            // koh/typo3-fal-s3 keeps the S3 object metadata (exists, size,
+            // mtime, etag) of its file storage driver in `koh_fal_s3_meta`.
+            // Every replica must see the same entries, and a cold cache costs
+            // one sequential HeadObject per processed image variant on the
+            // next render (about 20 ms each), so it belongs on the shared
+            // KeyValue store, not in the database. The driver takes this
+            // entry out of the CacheManager and builds the cache itself, so
+            // the deploy-time cache:flush leaves it warm. Added after
+            // cluster_meta so the database numbers of the existing caches do
+            // not move; its own database also keeps the backend's flush()
+            // (FLUSHDB without a key prefix) from reaching any other cache.
+            if (class_exists('Koh\\FalS3\\Driver\\DriverRuntimeFactory') && !isset($redisCaches['koh_fal_s3_meta'])) {
+                $redisCaches['koh_fal_s3_meta'] = ['defaultLifetime' => 86400];
+            }
+
             // pagesection cache was removed in TYPO3 12
             unset($redisCaches['pagesection'], $redisCaches['cache_pagesection']);
 

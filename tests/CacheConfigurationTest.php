@@ -70,6 +70,65 @@ class CacheConfigurationTest extends ConfigTestCase
         ];
     }
 
+    /**
+     * @param list<string> $installed class names class_exists() reports as present
+     * @return array<string, array<string, mixed>>
+     */
+    private function autoconfigureWith(array $installed): array
+    {
+        $getenv = $this->getFunctionMock('Moselwal', 'getenv');
+        $getenv->expects(self::any())->willReturnCallback(static fn ($key) => match ($key) {
+            'KEYVALUE_HOST' => 'redis.local',
+            'KEYVALUE_PORT' => '6379',
+            default => false,
+        });
+        $classExists = $this->getFunctionMock('Moselwal', 'class_exists');
+        $classExists->expects(self::any())->willReturnCallback(
+            static fn (string $class): bool => in_array(ltrim($class, '\\'), $installed, true),
+        );
+        $this->getFunctionMock('Moselwal', 'is_readable')->expects(self::any())->willReturn(false);
+        $this->getFunctionMock('Moselwal', 'function_exists')->expects(self::any())->willReturn(false);
+
+        TestableConfig::initializeWithVersion(14)->autoconfigureCaching();
+
+        return $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'] ?? [];
+    }
+
+    public function testFalS3MetadataCacheGoesToItsOwnKeyValueDatabase(): void
+    {
+        $caches = $this->autoconfigureWith([
+            'Moselwal\\Typo3ClusterCache\\Infrastructure\\Cache\\Backend\\ClusterFileBackend',
+            'Koh\\FalS3\\Driver\\DriverRuntimeFactory',
+        ]);
+
+        self::assertArrayHasKey('koh_fal_s3_meta', $caches);
+        self::assertSame(\Moselwal\KeyValueStore\Cache\Backend\KeyValueBackend::class, $caches['koh_fal_s3_meta']['backend']);
+        self::assertSame(86400, $caches['koh_fal_s3_meta']['options']['defaultLifetime']);
+
+        $databases = array_map(static fn (array $c): int => $c['options']['database'], $caches);
+        self::assertSame(count($databases), count(array_unique($databases)), 'every KeyValue cache needs a database of its own');
+        self::assertGreaterThan($databases['cluster_meta'], $databases['koh_fal_s3_meta'], 'appended last, so no existing cache changes its database');
+    }
+
+    public function testFalS3MetadataCacheDoesNotMoveTheExistingDatabases(): void
+    {
+        $without = $this->autoconfigureWith(['Moselwal\\Typo3ClusterCache\\Infrastructure\\Cache\\Backend\\ClusterFileBackend']);
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'] = [];
+        $with = $this->autoconfigureWith([
+            'Moselwal\\Typo3ClusterCache\\Infrastructure\\Cache\\Backend\\ClusterFileBackend',
+            'Koh\\FalS3\\Driver\\DriverRuntimeFactory',
+        ]);
+
+        foreach ($without as $name => $cache) {
+            self::assertSame($cache['options']['database'], $with[$name]['options']['database'], $name);
+        }
+    }
+
+    public function testFalS3MetadataCacheIsAbsentWithoutTheDriver(): void
+    {
+        self::assertArrayNotHasKey('koh_fal_s3_meta', $this->autoconfigureWith([]));
+    }
+
     public function testUseClusterFileBackendIsNoopWhenExtensionMissing(): void
     {
         // The class is not in the test autoloader, so class_exists() is false.
