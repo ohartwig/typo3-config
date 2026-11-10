@@ -1,3 +1,13 @@
+## [5.12.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.12.2...v5.12.3) (2026-11-10)
+
+### :bug: Fixes
+
+* **oauth2:** carry the resolved GitLab login over to authUser() ([3fd4f8a](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/3fd4f8a867935f00bc3f2695c9f5702ffc91bd92))
+
+### :repeat: Chores
+
+* **repo-templates:** sync ([09a09c3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/09a09c388cd964d6f904844e75e811adadf6c5b3))
+
 ## [5.12.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.12.1...v5.12.2) (2026-11-09)
 
 ### :bug: Fixes
