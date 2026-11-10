@@ -1,3 +1,9 @@
+## [5.13.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.12.3...v5.13.0) (2026-11-10)
+
+### :sparkles: Features
+
+* **caching:** put the koh/typo3-fal-s3 metadata cache on the KeyValue store ([6b86490](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/6b86490785f3a08aa7edda1c845af7ea8d933337))
+
 ## [5.12.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.12.2...v5.12.3) (2026-11-10)
 
 ### :bug: Fixes
