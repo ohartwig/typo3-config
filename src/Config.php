@@ -1077,6 +1077,15 @@ class Config implements ConfigInterface
      *                                  cluster-file-backend version that
      *                                  maintains the generation; ignored by
      *                                  versions that lack the option.
+     *  - `CLUSTER_CACHE_PHP_VERIFY_MEMO` — `1`/`true`/`on` switches on the
+     *                                  backend's `crossRequestPhpVerification`:
+     *                                  a code-cache payload (typoscript,
+     *                                  fluid_template) whose sha256 was
+     *                                  verified is not hashed again while one
+     *                                  lstat() shows the same inode, size and
+     *                                  ctime. Pod-local, no fleet-wide
+     *                                  precondition; ignored by versions that
+     *                                  lack the option.
      *
      * @param array<int, string> $excludeCaches Caches to keep on their
      *     current backend even if file-backed. Defaults are the caches
@@ -1160,6 +1169,10 @@ class Config implements ConfigInterface
         $metadataMemo = is_string($metadataMemoEnv)
             && in_array(strtolower(trim($metadataMemoEnv)), ['1', 'true', 'on', 'yes'], true)
             && $this->clusterFileBackendSupportsMetadataMemo();
+        $phpVerifyMemoEnv = getenv('CLUSTER_CACHE_PHP_VERIFY_MEMO');
+        $phpVerifyMemo = is_string($phpVerifyMemoEnv)
+            && in_array(strtolower(trim($phpVerifyMemoEnv)), ['1', 'true', 'on', 'yes'], true)
+            && $this->clusterFileBackendSupportsPhpVerifyMemo();
 
         // Zero-dependency fallback for `cluster_meta`. autoconfigureCaching()
         // already registers it on KeyValueBackend when Redis is available
@@ -1198,6 +1211,9 @@ class Config implements ConfigInterface
             if ($metadataMemo) {
                 $options['crossRequestMetadataMemo'] = true;
             }
+            if ($phpVerifyMemo) {
+                $options['crossRequestPhpVerification'] = true;
+            }
             $existingLifetime = isset($existing['options']['defaultLifetime'])
                 ? (int)$existing['options']['defaultLifetime']
                 : 0;
@@ -1234,6 +1250,16 @@ class Config implements ConfigInterface
     {
         // false as well when the package is not installed at all
         return method_exists(self::clusterFileBackendClass(), 'isCrossRequestMetadataMemoEnabled');
+    }
+
+    /**
+     * Whether the installed ClusterFileBackend knows the option
+     * `crossRequestPhpVerification`. Older versions validate their options
+     * and would reject it.
+     */
+    protected function clusterFileBackendSupportsPhpVerifyMemo(): bool
+    {
+        return method_exists(self::clusterFileBackendClass(), 'isCrossRequestPhpVerificationEnabled');
     }
 
     /**
