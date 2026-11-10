@@ -1,3 +1,9 @@
+## [5.14.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.13.0...v5.14.0) (2026-11-10)
+
+### :sparkles: Features
+
+* **caching:** forward CLUSTER_CACHE_PHP_VERIFY_MEMO to the cluster file backend ([acbf742](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/acbf742dc1c9c8cb575f7d51c9f6e02d0af67d19))
+
 ## [5.13.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.12.3...v5.13.0) (2026-11-10)
 
 ### :sparkles: Features
