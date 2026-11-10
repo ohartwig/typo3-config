@@ -25,6 +25,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\NullLogger;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\BcryptPasswordHash;
@@ -145,6 +146,40 @@ class GitLabLoginServiceTest extends ConfigTestCase
         self::assertSame(1, (int)$admin['admin']);
         self::assertSame(100, $service->authUser($admin));
         self::assertSame(200, $service->authUser($record));
+    }
+
+    #[Test]
+    public function aFreshServiceObjectAuthenticatesTheAccountItsRunResolved(): void
+    {
+        // TYPO3 builds one service object for getUser() and another for
+        // authUser(); both receive the same authentication object.
+        $this->insertUser(['uid' => 9, 'username' => 'operator', 'admin' => 1, 'oauth_identifier' => 'gitlab|1']);
+        $authentication = $this->createStub(BackendUserAuthentication::class);
+
+        $record = $this->login($this->loginService([], '', $authentication), $this->gitlabUser(1, 'operator', 'op@example.test'), 50);
+        self::assertNotNull($record);
+
+        $authenticating = $this->loginService([], '', $authentication, false);
+        self::assertSame(200, $authenticating->authUser($record));
+    }
+
+    #[Test]
+    public function aResolvedLoginNeverAuthenticatesAnotherAccountOrAnotherRun(): void
+    {
+        $this->insertUser(['uid' => 9, 'username' => 'operator', 'admin' => 1, 'oauth_identifier' => 'gitlab|1']);
+        $this->insertUser(['uid' => self::ADMIN_UID, 'username' => 'victim', 'admin' => 1, 'oauth_identifier' => 'gitlab|2']);
+        $authentication = $this->createStub(BackendUserAuthentication::class);
+
+        $record = $this->login($this->loginService([], '', $authentication), $this->gitlabUser(1, 'operator', 'op@example.test'), 50);
+        self::assertNotNull($record);
+
+        // Same run, another account: the token belongs to GitLab user 1 only.
+        $sameRun = $this->loginService([], '', $authentication, false);
+        self::assertSame(100, $sameRun->authUser($this->fetchUser(self::ADMIN_UID)));
+
+        // Another run (the next request in a worker): nothing carries over.
+        $otherRun = $this->loginService([], '', $this->createStub(BackendUserAuthentication::class), false);
+        self::assertSame(100, $otherRun->authUser($record));
     }
 
     #[Test]
@@ -299,7 +334,7 @@ class GitLabLoginServiceTest extends ConfigTestCase
     /**
      * @param array<string, int> $linkedAccounts
      */
-    private function loginService(array $linkedAccounts = [], string $accessGroup = ''): GitLabLoginService
+    private function loginService(array $linkedAccounts = [], string $accessGroup = '', ?BackendUserAuthentication $authentication = null, bool $register = true): GitLabLoginService
     {
         $extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
         $extensionConfiguration->method('get')->willReturn(['overrideUser' => '1', 'backendUserRealNameFormat' => '%name%']);
@@ -313,9 +348,11 @@ class GitLabLoginServiceTest extends ConfigTestCase
                 'check_pid_clause' => '',
                 'enable_clause' => 'disable = 0',
             ],
-        ], null);
+        ], $authentication ?? $this->createStub(BackendUserAuthentication::class));
 
-        $this->registerResourceServer($linkedAccounts, $accessGroup);
+        if ($register) {
+            $this->registerResourceServer($linkedAccounts, $accessGroup);
+        }
 
         return $service;
     }

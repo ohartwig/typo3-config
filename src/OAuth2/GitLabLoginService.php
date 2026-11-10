@@ -9,12 +9,14 @@ declare(strict_types=1);
 namespace Moselwal\OAuth2;
 
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
+use League\OAuth2\Client\Token\AccessToken;
 use Mfc\OAuth2\ResourceServer\AbstractResourceServer;
 use Mfc\OAuth2\Services\OAuth2LoginService;
 use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryHelper;
@@ -47,6 +49,12 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  *
  * Usernames and e-mail addresses are never used to find an account.
  *
+ * TYPO3 builds a new service object for every step of one authentication run
+ * (getUser, then authUser), and this class is not a shared container service
+ * the way upstream's is. What getUser() resolved is therefore handed to the
+ * authUser() instance through the authentication object both steps share;
+ * see rememberResolvedLogin().
+ *
  * Subclassed rather than patched, like GitLabResourceServer, so that an
  * mfc/oauth2 upgrade cannot silently drop it. Only protected upstream methods
  * are overridden; the database access goes through upstream's own helpers.
@@ -54,6 +62,24 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final class GitLabLoginService extends OAuth2LoginService
 {
     private ?AbstractResourceServer $activeResourceServer = null;
+
+    /**
+     * The login this instance resolved: resource server, access token and the
+     * oauth_identifier of the account it resolved to.
+     *
+     * @var array{AbstractResourceServer, AccessToken, string}|null
+     */
+    private ?array $resolvedLogin = null;
+
+    /**
+     * Logins resolved by getUser(), keyed by the authentication object of the
+     * run (the $pObj every service of the run receives). Weak, so an entry
+     * lives exactly as long as that request's authentication object — in a
+     * long-running worker nothing carries over to the next request.
+     *
+     * @var \WeakMap<AbstractUserAuthentication, array{AbstractResourceServer, AccessToken, string}>|null
+     */
+    private static ?\WeakMap $resolvedLogins = null;
 
     /**
      * Upstream's constructor is autowired through mfc/oauth2's Services.yaml.
@@ -116,8 +142,75 @@ final class GitLabLoginService extends OAuth2LoginService
         // as it was before the update (a demotion would only reach the next
         // request), and re-reads a created account by username.
         $record = $this->findUserByOauthIdentifier($user);
+        if ($record === null || $record === []) {
+            return null;
+        }
 
-        return $record === null || $record === [] ? null : $record;
+        $this->rememberResolvedLogin($resourceServer, (string)($record['oauth_identifier'] ?? ''));
+
+        return $record;
+    }
+
+    /**
+     * Authenticates only the account this login resolved to.
+     *
+     * TYPO3 calls authUser() on a fresh service object, so upstream's check
+     * (which needs the resource server and access token set by getUser())
+     * would always answer 100 and the login would fall through to the password
+     * service and fail. The fresh object takes over the login its run resolved
+     * — and only for the account carrying that identity: a token obtained for
+     * one GitLab user never authenticates another record.
+     *
+     * @param array<mixed> $userRecord
+     */
+    public function authUser(array $userRecord): int
+    {
+        $login = $this->resolvedLogin ?? $this->resolvedLoginOfThisRun();
+        if ($login === null) {
+            return 100;
+        }
+
+        [$resourceServer, $accessToken, $oauthIdentifier] = $login;
+        if ($oauthIdentifier === '' || ($userRecord['oauth_identifier'] ?? '') !== $oauthIdentifier) {
+            return 100;
+        }
+
+        $this->activeResourceServer = $resourceServer;
+        $this->setUpstreamState($resourceServer, $accessToken);
+
+        return parent::authUser($userRecord);
+    }
+
+    private function rememberResolvedLogin(AbstractResourceServer $resourceServer, string $oauthIdentifier): void
+    {
+        $accessToken = \Closure::bind(fn(): ?AccessToken => $this->accessToken, $this, OAuth2LoginService::class)();
+        if (!$accessToken instanceof AccessToken || $oauthIdentifier === '') {
+            return;
+        }
+
+        $this->resolvedLogin = [$resourceServer, $accessToken, $oauthIdentifier];
+        self::$resolvedLogins ??= new \WeakMap();
+        self::$resolvedLogins[$this->pObj] = $this->resolvedLogin;
+    }
+
+    /**
+     * @return array{AbstractResourceServer, AccessToken, string}|null
+     */
+    private function resolvedLoginOfThisRun(): ?array
+    {
+        if (self::$resolvedLogins === null) {
+            return null;
+        }
+
+        return self::$resolvedLogins[$this->pObj] ?? null;
+    }
+
+    private function setUpstreamState(AbstractResourceServer $resourceServer, AccessToken $accessToken): void
+    {
+        \Closure::bind(function () use ($resourceServer, $accessToken): void {
+            $this->resourceServer = $resourceServer;
+            $this->accessToken = $accessToken;
+        }, $this, OAuth2LoginService::class)();
     }
 
     /**
