@@ -1,3 +1,9 @@
+## [5.14.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.14.1...v5.14.2) (2026-11-13)
+
+### :bug: Fixes
+
+* **caching:** bound the KeyValue cache and lock connection timeouts ([be3b97e](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/be3b97e951e6b0c0efaba57bb01cf5e39d44796b))
+
 ## [5.14.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.14.0...v5.14.1) (2026-11-12)
 
 ### :repeat: Chores
