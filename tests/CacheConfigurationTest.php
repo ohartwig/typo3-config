@@ -74,10 +74,13 @@ class CacheConfigurationTest extends ConfigTestCase
      * @param list<string> $installed class names class_exists() reports as present
      * @return array<string, array<string, mixed>>
      */
-    private function autoconfigureWith(array $installed): array
+    private function autoconfigureWith(array $installed, array $env = []): array
     {
+        // Callable more than once per test: php-mock allows one enabled mock
+        // per function, so the previous call's mocks go first.
+        \phpmock\Mock::disableAll();
         $getenv = $this->getFunctionMock('Moselwal', 'getenv');
-        $getenv->expects(self::any())->willReturnCallback(static fn ($key) => match ($key) {
+        $getenv->expects(self::any())->willReturnCallback(static fn ($key) => $env[$key] ?? match ($key) {
             'KEYVALUE_HOST' => 'redis.local',
             'KEYVALUE_PORT' => '6379',
             default => false,
@@ -122,6 +125,38 @@ class CacheConfigurationTest extends ConfigTestCase
         foreach ($without as $name => $cache) {
             self::assertSame($cache['options']['database'], $with[$name]['options']['database'], $name);
         }
+    }
+
+    public function testEveryKeyValueCacheHasBoundedTimeouts(): void
+    {
+        $caches = $this->autoconfigureWith([]);
+
+        self::assertNotSame([], $caches);
+        foreach ($caches as $name => $cache) {
+            self::assertSame(1.0, $cache['options']['connectTimeout'], $name);
+            self::assertSame(2.0, $cache['options']['readTimeout'], $name);
+        }
+    }
+
+    public function testTimeoutsComeFromTheEnvironmentAndZeroOrJunkFallsBack(): void
+    {
+        $caches = $this->autoconfigureWith([], ['KEYVALUE_CONNECT_TIMEOUT' => '0.5', 'KEYVALUE_READ_TIMEOUT' => '5']);
+        self::assertSame(0.5, $caches['pages']['options']['connectTimeout']);
+        self::assertSame(5.0, $caches['pages']['options']['readTimeout']);
+
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'] = [];
+        $caches = $this->autoconfigureWith([], ['KEYVALUE_CONNECT_TIMEOUT' => '0', 'KEYVALUE_READ_TIMEOUT' => 'soon']);
+        self::assertSame(1.0, $caches['pages']['options']['connectTimeout'], '0 would mean unlimited');
+        self::assertSame(2.0, $caches['pages']['options']['readTimeout']);
+    }
+
+    public function testTheLockReadTimeoutOutlastsItsBlockingWait(): void
+    {
+        $this->autoconfigureWith(['Moselwal\\KeyValueStore\\Locking\\KeyValueLockingStrategy']);
+        $options = $GLOBALS['TYPO3_CONF_VARS']['SYS']['locking']['strategies']['Moselwal\\KeyValueStore\\Locking\\KeyValueLockingStrategy']['options'];
+
+        self::assertSame(1.0, $options['connectTimeout']);
+        self::assertGreaterThan($options['ttl'], $options['readTimeout'], 'BLPOP blocks for the ttl');
     }
 
     public function testFalS3MetadataCacheIsAbsentWithoutTheDriver(): void
