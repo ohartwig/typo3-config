@@ -836,6 +836,21 @@ class Config implements ConfigInterface
     }
 
     /**
+     * A timeout in seconds from an environment variable, or the default when
+     * the variable is empty, not a number, or not above zero (0 would mean
+     * unlimited to phpredis, which is what this guards against).
+     */
+    private static function positiveSeconds(string $raw, float $default): float
+    {
+        $raw = trim($raw);
+        if ('' === $raw || !is_numeric($raw) || (float) $raw <= 0.0) {
+            return $default;
+        }
+
+        return (float) $raw;
+    }
+
+    /**
      * @param array<string, array<string, mixed>> $additionalCachesKeyValue
      * @param array<string, array<string, mixed>> $additionalCachesAPCU
      */
@@ -853,6 +868,19 @@ class Config implements ConfigInterface
 
             $keyvalueTlsOptions = $this->autoconfigureKeyValueMtlsOptions($redisHost);
 
+            // Timeouts. phpredis treats 0 as unlimited, and the KeyValueBackend
+            // defaults both to 0 when no option is given: a Valkey that stops
+            // answering (paused, black-holed by the network, out of memory
+            // mid-fork) held every worker that touched a cache for as long as
+            // it lasted -- measured: a get() during a 3 s pause returned after
+            // 3.01 s. Bounded now, so a stalled store fails the request fast
+            // instead of draining the worker pool. Cache reads stay far below
+            // 2 s even for multi-megabyte page entries over TLS; the lock's
+            // read timeout must outlast its BLPOP, which blocks for its ttl.
+            $connectTimeout = self::positiveSeconds(self::env('KEYVALUE_CONNECT_TIMEOUT'), 1.0);
+            $cacheReadTimeout = self::positiveSeconds(self::env('KEYVALUE_READ_TIMEOUT'), 2.0);
+            $lockTtl = 10;
+
             // Locking strategy
             if (class_exists(KeyValueLockingStrategy::class)) {
                 $GLOBALS['TYPO3_CONF_VARS']['SYS']['locking']['strategies'][KeyValueLockingStrategy::class] = [
@@ -861,7 +889,9 @@ class Config implements ConfigInterface
                         'database' => 0,
                         'port' => $redisPort,
                         'persistentConnection' => true,
-                        'ttl' => 10,
+                        'ttl' => $lockTtl,
+                        'connectTimeout' => $connectTimeout,
+                        'readTimeout' => (float) ($lockTtl + 2),
                     ], $keyvalueTlsOptions),
                 ];
 
@@ -966,6 +996,8 @@ class Config implements ConfigInterface
                     'hostname' => $redisHost,
                     'port' => $redisPort,
                     'persistentConnection' => true,
+                    'connectTimeout' => $connectTimeout,
+                    'readTimeout' => $cacheReadTimeout,
                 ], $keyvalueTlsOptions);
                 if (isset($values['defaultLifetime'])) {
                     $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'][$name]['options']['defaultLifetime']

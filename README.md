@@ -254,6 +254,22 @@ Config::get()
     ]);
 ```text
 
+## KeyValue (Redis/Valkey) timeouts
+
+`autoconfigureCaching()` bounds every connection it configures. phpredis treats
+a timeout of 0 as unlimited, and that was the default: a Valkey that stopped
+answering held every worker that touched a cache for as long as it lasted.
+
+| Connection | Connect | Read | Override |
+|---|---|---|---|
+| Caches (`KeyValueBackend`) | 1 s | 2 s | `KEYVALUE_CONNECT_TIMEOUT`, `KEYVALUE_READ_TIMEOUT` |
+| Locking (`KeyValueLockingStrategy`) | 1 s | ttl + 2 s (12 s) | `KEYVALUE_CONNECT_TIMEOUT` |
+| Sessions (`KeyValueSessionBackend`) | 1 s | 1 s | the backend's own defaults |
+
+The lock's read timeout has to outlast its blocking wait: the strategy waits
+with `BLPOP` for up to its ttl (10 s). Values of 0, below 0 or not numeric fall
+back to the defaults.
+
 ## TYPO3 Version Compatibility
 
 | TYPO3 Version | Status |
