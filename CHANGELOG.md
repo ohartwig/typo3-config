@@ -1,3 +1,14 @@
+## [5.17.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.16.0...v5.17.0) (2026-11-14)
+
+### :sparkles: Features
+
+* **secrets:** resolve through moselwal/secret-resolver when it is installed ([e43b827](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/e43b8275ffdefb3e6fab05be701f3cade3dbcecd))
+
+### :bug: Fixes
+
+* **tests:** keep the secret-resolver stub out of composer's class scan ([a629189](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/a629189e8b122c6dfa554e40bb7b6d746d6593e3))
+* normalized composer.json, stub outside the psr-4 scan ([a2f1460](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/a2f14602e71ba25146dad011225e04871ec3e202))
+
 ## [5.16.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.15.0...v5.16.0) (2026-11-14)
 
 ### :sparkles: Features
