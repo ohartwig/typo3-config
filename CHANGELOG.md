@@ -1,3 +1,9 @@
+## [5.16.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.15.0...v5.16.0) (2026-11-14)
+
+### :sparkles: Features
+
+* **secrets:** ask the broker only for the names it serves ([ed526bf](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/ed526bf77ae2c08eee766a5c3a44d103dfe700fe))
+
 ## [5.15.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.14.3...v5.15.0) (2026-11-14)
 
 ### :sparkles: Features
