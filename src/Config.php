@@ -1370,7 +1370,8 @@ class Config implements ConfigInterface
      * broker. Protocol: "GET <name>\n" answered by "OK <length>\n<value>" or
      * "ERR <reason>\n" (devops/images/secret-broker).
      *
-     * Off unless KOH_SECRET_BROKER_SOCKET is set. Any failure -- no socket,
+     * Off unless KOH_SECRET_BROKER_SOCKET is set; KOH_SECRET_BROKER_KEYS
+     * (comma separated) limits it to the names the broker serves. Any failure -- no socket,
      * a name the broker does not serve, a timeout, a malformed answer --
      * returns null and resolveSecret() goes on with its files and
      * environment, so a pod without the broker, or a key it does not carry,
@@ -1384,6 +1385,14 @@ class Config implements ConfigInterface
         }
         $name = strtolower($key);
         if (preg_match('/^[a-z0-9_]{1,64}$/', $name) !== 1) {
+            return null;
+        }
+        // KOH_SECRET_BROKER_KEYS, when set, lists the names the broker
+        // serves; others are not asked at all. Every question is a line in
+        // the broker's log, and a log full of "unknown" hides the reads
+        // that matter.
+        $served = trim(self::env('KOH_SECRET_BROKER_KEYS'));
+        if ($served !== '' && !in_array($name, array_map('trim', explode(',', $served)), true)) {
             return null;
         }
 

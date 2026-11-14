@@ -131,4 +131,30 @@ class SecretBrokerTest extends ConfigTestCase
         $config = TestableConfig::initializeWithVersion(14);
         self::assertSame('from-file', $config->testResolveSecret('ENCRYPTION_KEY'));
     }
+
+    #[Test]
+    public function aNameOutsideTheServedListIsNotAsked(): void
+    {
+        $this->mockEnv([
+            'KOH_SECRET_BROKER_SOCKET' => '/run/broker/secrets.sock',
+            'KOH_SECRET_BROKER_KEYS' => 'encryption_key, gitlab_oauth_app_id',
+        ], '/run/secrets/db_password', 'from-file');
+        $this->getFunctionMock('Moselwal', 'stream_socket_client')->expects(self::never());
+
+        $config = TestableConfig::initializeWithVersion(14);
+        self::assertSame('from-file', $config->testResolveSecret('DB_PASSWORD'));
+    }
+
+    #[Test]
+    public function aNameInTheServedListIsAsked(): void
+    {
+        $socket = $this->startBroker(['gitlab_oauth_app_id' => "OK 2\nid"]);
+        $this->mockEnv([
+            'KOH_SECRET_BROKER_SOCKET' => $socket,
+            'KOH_SECRET_BROKER_KEYS' => 'encryption_key,gitlab_oauth_app_id',
+        ]);
+
+        $config = TestableConfig::initializeWithVersion(14);
+        self::assertSame('id', $config->testResolveSecret('GITLAB_OAUTH_APP_ID'));
+    }
 }
