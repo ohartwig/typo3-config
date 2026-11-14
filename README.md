@@ -44,6 +44,9 @@ Config::initialize()
 
 Secrets are resolved through a cascading lookup:
 
+0. The pod's secret broker, if `KOH_SECRET_BROKER_SOCKET` names its unix
+   socket (`GET db_password` → `OK <length>` + value). Any failure, or a name
+   the broker does not serve, falls through to the steps below.
 1. File path from env var (`DB_PASSWORD_FILE`)
 2. Default secret file (`/run/secrets/db_password`)
 3. Direct env var (`getenv('DB_PASSWORD')`)

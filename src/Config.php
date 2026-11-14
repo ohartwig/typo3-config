@@ -1307,6 +1307,8 @@ class Config implements ConfigInterface
     /**
      * Resolves a secret based on a single logical key (e.g. "DB_PASSWORD").
      * It tries:
+     *  0. The secret broker, when KOH_SECRET_BROKER_SOCKET names its socket
+     *     (see secretFromBroker())
      *  1. File from ENV: ${KEY}_FILE (e.g. DB_PASSWORD_FILE)
      *  2. Default file: /run/secrets/${key_lower}
      *  3. ENV: ${KEY}
@@ -1322,6 +1324,11 @@ class Config implements ConfigInterface
     ): ?string {
         if ($key === null) {
             return $fallback;
+        }
+
+        $brokered = $this->secretFromBroker($key);
+        if ($brokered !== null) {
+            return $brokered;
         }
 
         $envFileKey = strtoupper($key) . '_FILE';
@@ -1352,6 +1359,64 @@ class Config implements ConfigInterface
         }
 
         return null;
+    }
+
+    /**
+     * Asks the secret broker of the pod for a secret.
+     *
+     * The broker is a sidecar that serves named secrets over a unix socket,
+     * so the application container needs no secret files: a bug that reads
+     * an arbitrary path finds nothing, and every read is logged by the
+     * broker. Protocol: "GET <name>\n" answered by "OK <length>\n<value>" or
+     * "ERR <reason>\n" (devops/images/secret-broker).
+     *
+     * Off unless KOH_SECRET_BROKER_SOCKET is set. Any failure -- no socket,
+     * a name the broker does not serve, a timeout, a malformed answer --
+     * returns null and resolveSecret() goes on with its files and
+     * environment, so a pod without the broker, or a key it does not carry,
+     * behaves exactly as before.
+     */
+    private function secretFromBroker(string $key): ?string
+    {
+        $socket = trim(self::env('KOH_SECRET_BROKER_SOCKET'));
+        if ($socket === '') {
+            return null;
+        }
+        $name = strtolower($key);
+        if (preg_match('/^[a-z0-9_]{1,64}$/', $name) !== 1) {
+            return null;
+        }
+
+        $errno = 0;
+        $errstr = '';
+        $stream = @stream_socket_client('unix://' . $socket, $errno, $errstr, 1.0);
+        if ($stream === false) {
+            return null;
+        }
+        try {
+            stream_set_timeout($stream, 1);
+            if (@fwrite($stream, 'GET ' . $name . "\n") === false) {
+                return null;
+            }
+            $head = fgets($stream, 128);
+            if ($head === false || preg_match('/^OK (\d{1,5})\n$/', $head, $m) !== 1) {
+                return null;
+            }
+            $length = (int)$m[1];
+            $value = '';
+            while (strlen($value) < $length) {
+                $chunk = fread($stream, max(1, $length - strlen($value)));
+                if ($chunk === false || $chunk === '') {
+                    return null;
+                }
+                $value .= $chunk;
+            }
+            $value = trim($value);
+
+            return $value === '' ? null : $value;
+        } finally {
+            fclose($stream);
+        }
     }
 
     /**
