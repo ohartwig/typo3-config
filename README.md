@@ -44,7 +44,10 @@ Config::initialize()
 
 Secrets are resolved through a cascading lookup:
 
-0. The pod's secret broker, if `KOH_SECRET_BROKER_SOCKET` names its unix
+0. With `moselwal/secret-resolver` installed, its built-in cascade (the
+   pod's secret broker, then steps 1 and 2) — the same providers that resolve
+   `%secret()%` in the site configuration. Without it:
+   the pod's secret broker, if `KOH_SECRET_BROKER_SOCKET` names its unix
    socket (`GET db_password` → `OK <length>` + value). Any failure, or a name
    the broker does not serve, falls through to the steps below.
    `KOH_SECRET_BROKER_KEYS` (comma separated) limits the questions to the
