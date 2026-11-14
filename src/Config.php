@@ -1307,8 +1307,9 @@ class Config implements ConfigInterface
     /**
      * Resolves a secret based on a single logical key (e.g. "DB_PASSWORD").
      * It tries:
-     *  0. The secret broker, when KOH_SECRET_BROKER_SOCKET names its socket
-     *     (see secretFromBroker())
+     *  0. moselwal/secret-resolver's built-in cascade when installed (the
+     *     pod's secret broker, then the files of 1 and 2); without it, the
+     *     broker here (see secretFromBroker())
      *  1. File from ENV: ${KEY}_FILE (e.g. DB_PASSWORD_FILE)
      *  2. Default file: /run/secrets/${key_lower}
      *  3. ENV: ${KEY}
@@ -1326,9 +1327,18 @@ class Config implements ConfigInterface
             return $fallback;
         }
 
-        $brokered = $this->secretFromBroker($key);
-        if ($brokered !== null) {
-            return $brokered;
+        // moselwal/secret-resolver, when installed, owns the file and broker
+        // cascade; the same providers resolve the %secret()% placeholders of
+        // the site configuration. Its absence falls back to the copy below.
+        $resolved = self::resolveViaSecretResolver($key);
+        if ($resolved !== null) {
+            return $resolved;
+        }
+        if (!\class_exists(self::builtInSecretResolverClass())) {
+            $brokered = $this->secretFromBroker($key);
+            if ($brokered !== null) {
+                return $brokered;
+            }
         }
 
         $envFileKey = strtoupper($key) . '_FILE';
@@ -1362,7 +1372,43 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Asks the secret broker of the pod for a secret.
+     * moselwal/secret-resolver's built-in cascade (broker, *_FILE,
+     * /run/secrets), or null when the package is not installed, the key is
+     * not a valid secret key, or no provider has it. The class names are
+     * strings: the package is optional.
+     */
+    private static function resolveViaSecretResolver(string $key): ?string
+    {
+        $factory = self::builtInSecretResolverClass();
+        $keyClass = 'Moselwal\\SecretResolver\\Domain\\ValueObject\\SecretKey';
+        // Fully qualified: the tests mock class_exists() in this namespace for
+        // the optional keyvalue-store, and an answer meant for that must not
+        // reach this check.
+        if (!\class_exists($factory) || !\class_exists($keyClass)) {
+            return null;
+        }
+        try {
+            $resolver = $factory::create();
+            if (!is_object($resolver) || !method_exists($resolver, 'resolve')) {
+                return null;
+            }
+            $value = $resolver->resolve(new $keyClass($key));
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
+
+        return is_string($value) && trim($value) !== '' ? trim($value) : null;
+    }
+
+    private static function builtInSecretResolverClass(): string
+    {
+        return 'Moselwal\\SecretResolver\\Infrastructure\\Factory\\BuiltInSecretResolver';
+    }
+
+    /**
+     * Asks the secret broker of the pod for a secret. Only used without
+     * moselwal/secret-resolver >= the release with BrokerSecretProvider;
+     * with it the provider there asks.
      *
      * The broker is a sidecar that serves named secrets over a unix socket,
      * so the application container needs no secret files: a bug that reads

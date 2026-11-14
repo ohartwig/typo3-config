@@ -41,6 +41,7 @@
     },
     "suggest": {
         "moselwal/keyvalue-store": "Redis/Valkey integration for caching, sessions, and locking",
+        "moselwal/secret-resolver": "One secret cascade (pod secret broker, *_FILE, /run/secrets) for these secrets and the %secret()% placeholders",
         "mfc/oauth2": "GitLab/OAuth2 login provider for the TYPO3 backend, wired by useGitLabBackendLogin()"
     },
     "repositories": [
