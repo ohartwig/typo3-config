@@ -1,3 +1,9 @@
+## [5.15.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.14.3...v5.15.0) (2026-11-14)
+
+### :sparkles: Features
+
+* **secrets:** ask the pod's secret broker first ([302aeb2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/302aeb22a7d133ec74359c32d321269ef2684fa7))
+
 ## [5.14.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.14.2...v5.14.3) (2026-11-14)
 
 ### :repeat: Chores
