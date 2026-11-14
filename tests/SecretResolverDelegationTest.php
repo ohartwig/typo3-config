@@ -22,7 +22,7 @@ class SecretResolverDelegationTest extends ConfigTestCase
     #[RunInSeparateProcess]
     public function theSecretResolverAnswerWins(): void
     {
-        require __DIR__ . '/Fixtures/secret-resolver-stub.php';
+        require __DIR__ . '/Fixtures/secret-resolver-stub.inc';
         BuiltInSecretResolver::$values = ['ENCRYPTION_KEY' => ' from-resolver '];
         $this->getFunctionMock('Moselwal', 'getenv')->expects(self::any())
             ->willReturnCallback(static fn (string $k) => $k === 'ENCRYPTION_KEY' ? 'from-env' : false);
@@ -35,7 +35,7 @@ class SecretResolverDelegationTest extends ConfigTestCase
     #[RunInSeparateProcess]
     public function withoutAnAnswerTheEnvironmentAndFallbackFollow(): void
     {
-        require __DIR__ . '/Fixtures/secret-resolver-stub.php';
+        require __DIR__ . '/Fixtures/secret-resolver-stub.inc';
         BuiltInSecretResolver::$values = [];
         $this->getFunctionMock('Moselwal', 'getenv')->expects(self::any())
             ->willReturnCallback(static fn (string $k) => $k === 'MAIL_PASSWORD' ? 'from-env' : false);
@@ -51,7 +51,7 @@ class SecretResolverDelegationTest extends ConfigTestCase
     #[RunInSeparateProcess]
     public function aKeyTheResolverRejectsFallsThrough(): void
     {
-        require __DIR__ . '/Fixtures/secret-resolver-stub.php';
+        require __DIR__ . '/Fixtures/secret-resolver-stub.inc';
         $this->getFunctionMock('Moselwal', 'getenv')->expects(self::any())->willReturn(false);
         $this->getFunctionMock('Moselwal', 'is_readable')->expects(self::any())->willReturn(false);
 

@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 // A stand-in for moselwal/secret-resolver's two classes typo3-config uses.
-// Loaded only by tests that run in their own process.
+// Loaded only by tests that run in their own process. Not .php: composer
+// would map these namespaces into the tests autoloader (psr-4 rule).
 
 namespace Moselwal\SecretResolver\Domain\ValueObject {
     final class SecretKey
