@@ -1,3 +1,13 @@
+## [5.17.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.17.0...v5.17.1) (2026-11-17)
+
+### :bug: Fixes
+
+* **composer:** point homepage at the package page ([acfa82d](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/acfa82d8b354a1530859ca83019dd74ee3ab4020))
+
+### :repeat: Chores
+
+* **deps:** update dependency registry.ole-hartwig.eu/devops/images/franken-php/ci to v3.2.246-8.5 ([da18733](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/da18733ec2405f719bf4f9fa3d112cb7dd6f7b9b))
+
 ## [5.17.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.16.0...v5.17.0) (2026-11-14)
 
 ### :sparkles: Features
