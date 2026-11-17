@@ -92,9 +92,7 @@ class Config implements ConfigInterface
     {
         if ($hosts !== null) {
             $GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss'] = $hosts;
-            return $this;
-        }
-        if (!is_array($GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss'] ?? null)) {
+        } elseif (!is_array($GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss'] ?? null)) {
             $GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss'] = [];
         }
         return $this;

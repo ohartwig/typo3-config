@@ -335,7 +335,7 @@ composer phpstan           # PHPStan Level 5 static analysis
 
 ## Related
 
-- [keyvalue-store](../keyvalue-store) — Redis/Valkey integration used by the caching auto-configuration
+- [keyvalue-store](https://ole-hartwig.eu/open-source/keyvalue-store) — Redis/Valkey integration used by the caching auto-configuration
 
 ## License
 
