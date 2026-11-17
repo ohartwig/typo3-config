@@ -91,7 +91,7 @@ class Config implements ConfigInterface
     final public function restrictDashboardRssHosts(?array $hosts = null): self
     {
         if ($hosts !== null) {
-            $GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss'] = array_values($hosts);
+            $GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss'] = $hosts;
             return $this;
         }
         if (!is_array($GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss'] ?? null)) {

@@ -41,6 +41,9 @@ public function setConfigPathValues(string $configPath, array $keyValuePairs): s
 public function initializeDatabaseConnection(?array $options = null, string $connectionName = 'Default'): self;
 public function allowNoCacheQueryParameter(): self;
 public function forbidNoCacheQueryParameter(): self;
+
+/** @param list<string>|null $hosts */
+public function restrictDashboardRssHosts(?array $hosts = null): self;
 public function useReverseProxy(string $trustedIPs = '*'): self;
 public function useAuditLogging(): self;
 public function useRequestCorrelation(): self;
