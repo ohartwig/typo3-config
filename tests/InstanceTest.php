@@ -35,6 +35,37 @@ class InstanceTest extends ConfigTestCase
     }
 
     #[Test]
+    public function applyDefaultsDeniesAllDashboardRssHostsWhenUnset(): void
+    {
+        unset($GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss']);
+
+        (new Config())->applyDefaults();
+
+        self::assertSame([], $GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss']);
+    }
+
+    #[Test]
+    public function applyDefaultsKeepsConfiguredDashboardRssHosts(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss'] = ['typo3.org'];
+
+        (new Config())->applyDefaults();
+
+        self::assertSame(['typo3.org'], $GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss']);
+    }
+
+    #[Test]
+    public function restrictDashboardRssHostsSetsGivenHosts(): void
+    {
+        (new Config())->restrictDashboardRssHosts(['typo3.org', 'news.typo3.com']);
+
+        self::assertSame(
+            ['typo3.org', 'news.typo3.com'],
+            $GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss']
+        );
+    }
+
+    #[Test]
     public function fluentInterfaceReturnsInstance(): void
     {
         $instance = new Config();
