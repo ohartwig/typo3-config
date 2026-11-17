@@ -246,6 +246,20 @@ ins Backend.
 | `useProductionPreset()` | Production with APP_ROOT (container) |
 | `useProductionPresetVHost()` | Production with VHost-based setup |
 
+### Dashboard RSS widget hosts
+
+`applyDefaults()` sets `HTTP.allowed_hosts.dashboard_rss` to an empty list
+unless a value is already configured (TYPO3-CORE-SA-2026-034). User-configured
+RSS widgets can then fetch nothing; without the key, TYPO3 lets them request any
+host, internal services included. A tenant whose widgets need feeds allows them
+explicitly:
+
+```php
+(new Moselwal\Config())
+    ->applyDefaults()
+    ->restrictDashboardRssHosts(['typo3.org', 'news.typo3.com']);
+```
+
 ## Usage Example
 
 ```php
@@ -321,7 +335,7 @@ composer phpstan           # PHPStan Level 5 static analysis
 
 ## Related
 
-- [keyvalue-store](../keyvalue-store) — Redis/Valkey integration used by the caching auto-configuration
+- [keyvalue-store](https://ole-hartwig.eu/open-source/keyvalue-store) — Redis/Valkey integration used by the caching auto-configuration
 
 ## License
 

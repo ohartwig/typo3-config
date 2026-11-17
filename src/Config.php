@@ -59,6 +59,7 @@ class Config implements ConfigInterface
         // Include presets by default
         $this
             ->forbidNoCacheQueryParameter()
+            ->restrictDashboardRssHosts()
             ->appendContextToSiteName()
             ->useGraphicsMagick();
 
@@ -72,6 +73,27 @@ class Config implements ConfigInterface
             } else {
                 $this->useProductionPresetVHost();
             }
+        }
+        return $this;
+    }
+
+    /**
+     * Restrict the hosts the dashboard RSS widget may fetch (TYPO3-CORE-SA-2026-034,
+     * SSRF). Until this key is set, TYPO3 14.3.12 still lets user-configured RSS
+     * widgets request any host, internal services and cloud metadata included.
+     *
+     * The default is an empty list: no user-configured RSS widget may fetch
+     * anything. A value already set (settings.php or an earlier call) is kept;
+     * call this method with the hosts a tenant's widgets need to allow them.
+     *
+     * @param list<string>|null $hosts null keeps an existing value or sets []
+     */
+    final public function restrictDashboardRssHosts(?array $hosts = null): self
+    {
+        if ($hosts !== null) {
+            $GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss'] = $hosts;
+        } elseif (!is_array($GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss'] ?? null)) {
+            $GLOBALS['TYPO3_CONF_VARS']['HTTP']['allowed_hosts']['dashboard_rss'] = [];
         }
         return $this;
     }
