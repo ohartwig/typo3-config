@@ -1,3 +1,11 @@
+## [5.17.2](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.17.1...v5.17.2) (2026-11-17)
+
+### :bug: Fixes
+
+* **security:** kill the escaped mutant and the dead README link ([c126382](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/c126382356e8cda66e883f9fb7bbf263b336c317))
+* **security:** declare restrictDashboardRssHosts in ConfigInterface ([5ec57ed](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/5ec57ed506f6482348da9a920a6b9f2f4d3cfc9a))
+* **security:** deny dashboard RSS widget hosts by default ([8d2bdaa](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/8d2bdaaf91fbf7880ef7cf84b27dc39c3ecc1645))
+
 ## [5.17.1](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.17.0...v5.17.1) (2026-11-17)
 
 ### :bug: Fixes
