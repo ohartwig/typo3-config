@@ -13,6 +13,7 @@ use TYPO3\CMS\Core\Log\LogLevel;
 use TYPO3\CMS\Core\Log\Writer\DatabaseWriter;
 use TYPO3\CMS\Core\Log\Writer\FileWriter;
 use TYPO3\CMS\Core\Log\Writer\NullWriter;
+use TYPO3\CMS\Core\Log\Writer\PhpErrorLogWriter;
 
 /**
  * Genau der Bereich, den dieser MR anfasst, war bis hierher ungemessen:
@@ -157,6 +158,44 @@ class LoggingConfigurationTest extends ConfigTestCase
 
         self::assertSame('auth', $backend[LogLevel::NOTICE][FileWriter::class]['logFileInfix']);
         self::assertSame('sys_log', $backend[LogLevel::NOTICE][DatabaseWriter::class]['logTable']);
+    }
+
+    #[Test]
+    public function auditLoggingSchreibtAuchNachStdErr(): void
+    {
+        // Datei und Pod teilen sich das Schicksal: nach einem Deploy ist beides
+        // weg. Nur stderr erreicht die Log-Pipeline.
+        (new Config())->useAuditLogging();
+
+        $log = $GLOBALS['TYPO3_CONF_VARS']['LOG']['TYPO3']['CMS'];
+
+        self::assertArrayHasKey(
+            PhpErrorLogWriter::class,
+            $log['Backend']['Authentication']['writerConfiguration'][LogLevel::NOTICE],
+        );
+        self::assertArrayHasKey(
+            PhpErrorLogWriter::class,
+            $log['Core']['Authentication']['AbstractUserAuthentication']['writerConfiguration'][LogLevel::NOTICE],
+        );
+    }
+
+    #[Test]
+    public function diePasskeyAnmeldungSchreibtNachStdErrStattInIhreDatei(): void
+    {
+        // nr-passkeys-be setzt fuer seinen Namensraum mit ??= einen FileWriter
+        // unter typo3temp/var/log/. Die Zeile aus ihrer ext_localconf.php laeuft
+        // hier nach useAuditLogging, wie im echten Bootstrap - und darf dann
+        // nichts mehr aendern.
+        (new Config())->useAuditLogging();
+
+        $GLOBALS['TYPO3_CONF_VARS']['LOG']['Netresearch']['NrPasskeysBe']['writerConfiguration'][LogLevel::WARNING] ??= [
+            FileWriter::class => ['logFile' => 'typo3temp/var/log/passkey_auth.log'],
+        ];
+
+        self::assertSame(
+            [LogLevel::WARNING => [PhpErrorLogWriter::class => []]],
+            $GLOBALS['TYPO3_CONF_VARS']['LOG']['Netresearch']['NrPasskeysBe']['writerConfiguration'],
+        );
     }
 
     #[Test]
