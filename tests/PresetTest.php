@@ -86,8 +86,8 @@ class PresetTest extends ConfigTestCase
             $writer[\TYPO3\CMS\Core\Log\LogLevel::ERROR][\TYPO3\CMS\Core\Log\Writer\FileWriter::class]['disabled']
         );
         self::assertFalse(
-            $writer[\TYPO3\CMS\Core\Log\LogLevel::ERROR][\TYPO3\CMS\Core\Log\Writer\PhpErrorLogWriter::class]['disabled'],
-            'Ab ERROR muss nach stderr geschrieben werden.'
+            $writer[\TYPO3\CMS\Core\Log\LogLevel::WARNING][\TYPO3\CMS\Core\Log\Writer\PhpErrorLogWriter::class]['disabled'],
+            'Ab WARNING muss nach stderr geschrieben werden.'
         );
     }
 
@@ -110,7 +110,7 @@ class PresetTest extends ConfigTestCase
         $writer = $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration'];
 
         self::assertFalse(
-            $writer[\TYPO3\CMS\Core\Log\LogLevel::ERROR][\TYPO3\CMS\Core\Log\Writer\PhpErrorLogWriter::class]['disabled']
+            $writer[\TYPO3\CMS\Core\Log\LogLevel::WARNING][\TYPO3\CMS\Core\Log\Writer\PhpErrorLogWriter::class]['disabled']
         );
         foreach ($writer as $level => $writers) {
             if (isset($writers[\TYPO3\CMS\Core\Log\Writer\FileWriter::class])) {
@@ -168,14 +168,56 @@ class PresetTest extends ConfigTestCase
             );
         }
 
-        // Ab ERROR nach stderr - das faengt error, critical, alert und
-        // emergency mit. Darunter bleibt es still.
+        // Ab WARNING nach stderr - das faengt warning, error, critical, alert
+        // und emergency mit. Darunter bleibt es still, und auf den hoeheren
+        // Stufen steht der Writer nicht ein zweites Mal.
         self::assertFalse(
+            $writer[\TYPO3\CMS\Core\Log\LogLevel::WARNING][\TYPO3\CMS\Core\Log\Writer\PhpErrorLogWriter::class]['disabled']
+        );
+        self::assertTrue(
             $writer[\TYPO3\CMS\Core\Log\LogLevel::ERROR][\TYPO3\CMS\Core\Log\Writer\PhpErrorLogWriter::class]['disabled']
         );
         self::assertTrue(
-            $writer[\TYPO3\CMS\Core\Log\LogLevel::WARNING][\TYPO3\CMS\Core\Log\Writer\PhpErrorLogWriter::class]['disabled']
+            $writer[\TYPO3\CMS\Core\Log\LogLevel::NOTICE][\TYPO3\CMS\Core\Log\Writer\PhpErrorLogWriter::class]['disabled']
         );
+    }
+
+    /**
+     * Was am Ende zaehlt, ist nicht das Array, sondern was TYPO3 daraus baut:
+     * ein Writer haengt an seiner Stufe und an jeder schwereren. Stuende der
+     * PhpErrorLogWriter auf WARNING und auf ERROR, kaeme jeder Fehler doppelt
+     * in der Log-Pipeline an.
+     */
+    #[Test]
+    public function jedeStufeAbWarningLandetGenauEinmalAufStdErr(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['LOG']['writerConfiguration'] = [
+            \TYPO3\CMS\Core\Log\LogLevel::WARNING => [
+                \TYPO3\CMS\Core\Log\Writer\FileWriter::class => [],
+            ],
+        ];
+
+        (new Config())->useProductionPreset();
+
+        $writers = (new \TYPO3\CMS\Core\Log\LogManager())->getLogger('Vendor\\Extension\\Service')->getWriters();
+
+        foreach ([
+            \TYPO3\CMS\Core\Log\LogLevel::EMERGENCY,
+            \TYPO3\CMS\Core\Log\LogLevel::ALERT,
+            \TYPO3\CMS\Core\Log\LogLevel::CRITICAL,
+            \TYPO3\CMS\Core\Log\LogLevel::ERROR,
+            \TYPO3\CMS\Core\Log\LogLevel::WARNING,
+        ] as $stufe) {
+            self::assertCount(1, $writers[$stufe] ?? [], sprintf('Stufe "%s"', $stufe));
+            self::assertInstanceOf(\TYPO3\CMS\Core\Log\Writer\PhpErrorLogWriter::class, $writers[$stufe][0]);
+        }
+        foreach ([
+            \TYPO3\CMS\Core\Log\LogLevel::NOTICE,
+            \TYPO3\CMS\Core\Log\LogLevel::INFO,
+            \TYPO3\CMS\Core\Log\LogLevel::DEBUG,
+        ] as $stufe) {
+            self::assertSame([], $writers[$stufe] ?? [], sprintf('Stufe "%s"', $stufe));
+        }
     }
 
     #[Test]

@@ -205,7 +205,7 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Alles ab ERROR nach stderr, und keine Datei.
+     * Alles ab WARNING nach stderr, und keine Datei.
      *
      * Der Fehler war, dass die Presets den FileWriter nie erwaehnten. Sie
      * setzten nur PhpErrorLogWriter, waehrend TYPO3s eigene Vorgabe
@@ -232,22 +232,30 @@ class Config implements ConfigInterface
         // abgeschaltet ist. Deshalb wird der FileWriter ueberall ausdruecklich
         // stillgelegt.
         //
-        // Der PhpErrorLogWriter genuegt auf ERROR: von dort faengt er error,
-        // critical, alert und emergency mit. Genau darauf kommt es an -
-        // TYPO3s ProductionExceptionHandler meldet die "Oops"-Ausnahmen aus
-        // Inhaltselementen auf Stufe alert.
+        // Der PhpErrorLogWriter steht einmal, auf WARNING: von dort faengt er
+        // warning, error, critical, alert und emergency mit. Auf den hoeheren
+        // Stufen bleibt er abgeschaltet, sonst kaeme jeder Fehler doppelt -
+        // TYPO3 haengt einen Writer an seine Stufe UND an jede schwerere.
+        //
+        // Frueher lag die Schwelle bei ERROR. Warnungen gingen damit nirgends
+        // hin: keine Datei, kein stderr. Gerade die Warnungen erklaeren aber,
+        // warum eine Anmeldung abgelehnt wurde oder ein Dienst nicht
+        // antwortete - und nach einem Pod-Neustart war die Datei, in der sie
+        // vorher standen, ohnehin weg. TYPO3s ProductionExceptionHandler
+        // meldet die "Oops"-Ausnahmen aus Inhaltselementen auf Stufe alert;
+        // die faengt der Writer auf WARNING genauso.
         //
         // Betrifft nur die Wurzel-Konfiguration. Eigene writerConfiguration
         // unterhalb von LOG.TYPO3.CMS.* - etwa das Auth-Log - bleiben, wie
         // sie sind; die haben ihre eigene Begruendung.
         $forced = [];
-        foreach ([LogLevel::EMERGENCY, LogLevel::ALERT, LogLevel::CRITICAL, LogLevel::ERROR] as $level) {
+        foreach ([LogLevel::EMERGENCY, LogLevel::ALERT, LogLevel::CRITICAL, LogLevel::ERROR, LogLevel::WARNING] as $level) {
             $forced[$level] = [
-                PhpErrorLogWriter::class => ['disabled' => $level !== LogLevel::ERROR],
+                PhpErrorLogWriter::class => ['disabled' => $level !== LogLevel::WARNING],
                 FileWriter::class => ['disabled' => true],
             ];
         }
-        foreach ([LogLevel::WARNING, LogLevel::NOTICE, LogLevel::INFO, LogLevel::DEBUG] as $level) {
+        foreach ([LogLevel::NOTICE, LogLevel::INFO, LogLevel::DEBUG] as $level) {
             $forced[$level] = [
                 PhpErrorLogWriter::class => ['disabled' => true],
                 FileWriter::class => ['disabled' => true],
@@ -622,9 +630,21 @@ class Config implements ConfigInterface
     /**
      * Aktiviert Audit-Logging fuer Authentication-Events (Failed-Logins,
      * Permission-Denied, MFA-Versuche). Schreibt parallel in FileWriter
-     * (var/log/typo3_auth.log) und DatabaseWriter (sys_log mit channel=security),
-     * sodass Brute-Force-Attacken nachvollziehbar sind und CrowdSec/SIEM-
-     * Systeme eine Auswertbare Quelle haben.
+     * (var/log/typo3_auth.log), DatabaseWriter (sys_log mit channel=security)
+     * und nach stderr, sodass Brute-Force-Attacken nachvollziehbar sind und
+     * CrowdSec/SIEM-Systeme eine Auswertbare Quelle haben.
+     *
+     * stderr ist der einzige der drei Wege, der einen Pod-Neustart sicher
+     * uebersteht und in der Log-Pipeline landet. Die Datei liegt im Container
+     * und ist nach jedem Deploy weg.
+     *
+     * Die Passkey-Anmeldung (netresearch/nr-passkeys-be) haengt nicht an den
+     * beiden Core-Komponenten: die Extension setzt fuer ihren Namensraum
+     * eine eigene writerConfiguration, eine Datei unter typo3temp/var/log/,
+     * und zwar mit ??=. Wer sie hier vorher setzt, gewinnt. Ohne das bleibt
+     * eine abgelehnte Passkey-Anmeldung nur in einer Datei, die der naechste
+     * Pod nicht mehr hat. Ist die Extension nicht installiert, liest den
+     * Schluessel niemand.
      *
      * Mitigation fuer Pentest 2026-05-20 F-13.
      */
@@ -638,6 +658,7 @@ class Config implements ConfigInterface
                 \TYPO3\CMS\Core\Log\Writer\DatabaseWriter::class => [
                     'logTable' => 'sys_log',
                 ],
+                PhpErrorLogWriter::class => [],
             ],
         ];
         $components = [
@@ -653,6 +674,18 @@ class Config implements ConfigInterface
                     'Backend' => [
                         'Authentication' => [
                             'writerConfiguration' => $writers,
+                        ],
+                    ],
+                ],
+            ],
+            // Die Extension schreibt Fehlversuche, Sperren und Rate-Limits auf
+            // WARNING, erfolgreiche Anmeldungen auf INFO. Ihre eigene Schwelle
+            // bleibt, nur das Ziel wechselt.
+            'Netresearch' => [
+                'NrPasskeysBe' => [
+                    'writerConfiguration' => [
+                        \TYPO3\CMS\Core\Log\LogLevel::WARNING => [
+                            PhpErrorLogWriter::class => [],
                         ],
                     ],
                 ],
