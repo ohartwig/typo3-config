@@ -1,3 +1,13 @@
+## [5.18.0](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.17.3...v5.18.0) (2026-11-25)
+
+### :sparkles: Features
+
+* **logging:** send warnings and auth audit events to stderr ([95ba35d](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/95ba35d147039858d16d281c7ea6661fcbb2e268))
+
+### :repeat: Chores
+
+* **deps:** update lefthook hook images ([c9abd8d](https://git.ole-hartwig.eu/development/moselwal/typo3-config/commit/c9abd8d0c43fbb103a396bf29c689d02be5c9bf8))
+
 ## [5.17.3](https://git.ole-hartwig.eu/development/moselwal/typo3-config/compare/v5.17.2...v5.17.3) (2026-11-20)
 
 ### :repeat: Chores
